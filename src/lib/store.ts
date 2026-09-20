@@ -12,17 +12,17 @@ export interface AdSetting {
 }
 
 export const DEFAULT_ADS: AdSetting[] = [
-  { id: 'header', name: '헤더 (728x90 / 300x100)', enabled: true, code: '', description: '상단 네비게이션 주변 (PC: 12192494, 모바일: 12192538)', device: 'all' },
-  { id: 'top', name: '상단 (728x90 / 300x100)', enabled: true, code: '', description: '페이지 타이틀 아래 (PC: 12192494, 모바일: 12192538)', device: 'all' },
-  { id: 'content-top', name: '본문 상단 (728x90 / 300x250)', enabled: true, code: '', description: '업로드 영역 위 (PC: 12192494, 모바일: 12192502)', device: 'all' },
-  { id: 'content-middle', name: '본문 중간 (300x250)', enabled: true, code: '', description: '주요 도구 사이 (Zone ID: 12192502)', device: 'all' },
-  { id: 'content-bottom', name: '본문 하단 (300x250)', enabled: true, code: '', description: '사용 방법 위 (Zone ID: 12192502)', device: 'all' },
-  { id: 'sidebar', name: '사이드바 (160x600)', enabled: true, code: '', description: '양측 여백 (Zone ID: 12192530)', device: 'pc' },
-  { id: 'result-page', name: '결과 페이지 (300x250)', enabled: true, code: '', description: '결과 화면 상/하단 (Zone ID: 12192502)', device: 'all' },
-  { id: 'download-area', name: '다운로드 영역 (300x250)', enabled: true, code: '', description: '다운로드 버튼 주변 (Zone ID: 12192502)', device: 'all' },
-  { id: 'download-modal', name: '다운로드 팝업 모달 (300x250)', enabled: true, code: '', description: '다운로드 클릭 시 노출 (Zone ID: 12192502)', device: 'all' },
-  { id: 'mobile-only', name: '모바일 전용 (300x100)', enabled: true, code: '', description: '모바일 화면 하단 고정 (Zone ID: 12192538)', device: 'mobile' },
-  { id: 'footer', name: '푸터 (728x90 / 300x100)', enabled: true, code: '', description: '페이지 최하단 (PC: 12192494, 모바일: 12192538)', device: 'all' },
+  { id: 'header', name: '헤더 (728x90 / 300x100)', enabled: false, code: '', description: '상단 네비게이션 주변', device: 'all' },
+  { id: 'top', name: '상단 (728x90 / 300x100)', enabled: false, code: '', description: '페이지 타이틀 아래', device: 'all' },
+  { id: 'content-top', name: '본문 상단 (728x90 / 300x250)', enabled: false, code: '', description: '업로드 영역 위', device: 'all' },
+  { id: 'content-middle', name: '본문 중간 (300x250)', enabled: false, code: '', description: '주요 도구 사이', device: 'all' },
+  { id: 'content-bottom', name: '본문 하단 (300x250)', enabled: false, code: '', description: '사용 방법 위', device: 'all' },
+  { id: 'sidebar', name: '사이드바 (160x600)', enabled: false, code: '', description: '양측 여백', device: 'pc' },
+  { id: 'result-page', name: '결과 페이지 (300x250)', enabled: false, code: '', description: '결과 화면 상/하단', device: 'all' },
+  { id: 'download-area', name: '다운로드 영역 (300x250)', enabled: false, code: '', description: '다운로드 버튼 주변', device: 'all' },
+  { id: 'download-modal', name: '다운로드 팝업 모달 (300x250)', enabled: false, code: '', description: '다운로드 클릭 시 노출', device: 'all' },
+  { id: 'mobile-only', name: '모바일 전용 (300x100)', enabled: false, code: '', description: '모바일 화면 하단 고정', device: 'mobile' },
+  { id: 'footer', name: '푸터 (728x90 / 300x100)', enabled: false, code: '', description: '페이지 최하단', device: 'all' },
 ];
 
 export const ALL_TOOLS: { id: ToolId; name: string }[] = [
