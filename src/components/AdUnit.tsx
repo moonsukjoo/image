@@ -61,17 +61,17 @@ export function AdUnit({ slot, className }: AdUnitProps) {
     const container = bannerContainerRef.current;
     if (!container) return;
 
-    // Reset container if re-running
     if (!hasInjectedRef.current) {
       hasInjectedRef.current = true;
 
+      // Clean container
+      container.innerHTML = '';
+
       // If user provided custom HTML/JS code in Admin
       if (adConfig.code && adConfig.code.trim()) {
-        container.innerHTML = '';
         const temp = document.createElement('div');
         temp.innerHTML = adConfig.code;
         
-        // Execute any script tags properly
         Array.from(temp.querySelectorAll('script')).forEach(oldScript => {
           const newScript = document.createElement('script');
           Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
@@ -84,19 +84,15 @@ export function AdUnit({ slot, className }: AdUnitProps) {
         }
       } else {
         // Run standard Adcash Banner for this zone
-        try {
-          if (typeof window !== 'undefined' && (window as any).aclib && (window as any).aclib.runBanner) {
-            (window as any).aclib.runBanner({ zoneId: activeZoneId });
-          } else {
-            // Inject script directly into the container as recommended by Adcash
-            const script = document.createElement('script');
-            script.type = 'text/javascript';
-            script.text = `try { aclib.runBanner({ zoneId: '${activeZoneId}' }); } catch(e) {}`;
-            container.appendChild(script);
+        // Adcash requires the script tag to be in the DOM so document.currentScript points to it
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.innerHTML = `
+          if (typeof aclib !== 'undefined' && aclib.runBanner) {
+            aclib.runBanner({ zoneId: '${activeZoneId}' });
           }
-        } catch (e) {
-          // ignore error
-        }
+        `;
+        container.appendChild(script);
       }
     }
   }, [adConfig, activeZoneId, isMobile]);
