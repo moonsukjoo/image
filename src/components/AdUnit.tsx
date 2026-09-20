@@ -105,26 +105,13 @@ export function AdUnit({ slot, className }: AdUnitProps) {
   if (adConfig.device === 'pc' && isMobile) return null;
 
   return (
-    <div className={cn("w-full flex flex-col items-center justify-center my-3 transition-all", className)}>
+    <div className={cn("w-full flex flex-col items-center justify-center my-2 transition-all overflow-hidden", className)}>
       {/* Live Adcash / Custom Banner Container */}
       <div 
         ref={bannerContainerRef} 
         id={`adcash-slot-${slot}`}
-        className="relative flex items-center justify-center overflow-hidden min-h-[50px] max-w-full"
+        className="relative flex items-center justify-center max-w-full"
       />
-
-      {/* Visual Slot Frame & Info (Always visible so users know it's active) */}
-      <div className="w-full max-w-2xl mt-1 py-1.5 px-3 rounded-xl bg-slate-50 border border-dashed border-slate-200/90 flex items-center justify-between text-[11px] text-slate-400">
-        <div className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span className="font-semibold text-slate-600">{adConfig.name}</span>
-          <span className="text-slate-400 hidden sm:inline">({activeSize})</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] text-slate-400 font-mono">Zone: {activeZoneId}</span>
-          <span className="bg-slate-200 text-slate-600 text-[9px] font-bold px-1.5 py-0.5 rounded">AD</span>
-        </div>
-      </div>
     </div>
   );
 }

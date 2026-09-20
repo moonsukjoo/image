@@ -115,31 +115,9 @@ export function DownloadAdModal({
         </div>
 
         {/* Sponsor / Ad content area */}
-        <div className="p-6 flex flex-col items-center justify-center min-h-[220px] bg-slate-50/30">
+        <div className="p-6 flex flex-col items-center justify-center min-h-[140px] bg-slate-50/30">
           <div className="w-full">
-            {/* Try download-modal slot first */}
-            <AdUnit slot="download-modal" height="h-44" className="w-full" />
-            
-            {/* Fallback attractive sponsor card if no ad code registered */}
-            {!hasCustomCode && (
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-900 to-blue-950 text-white shadow-md relative overflow-hidden text-center my-2">
-                <div className="absolute top-2 right-2 text-[10px] font-bold text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded">
-                  SPONSOR
-                </div>
-                <div className="w-10 h-10 rounded-xl bg-blue-600/30 border border-blue-400/30 text-blue-300 flex items-center justify-center mx-auto mb-2.5">
-                  <Sparkles size={20} />
-                </div>
-                <h4 className="font-bold text-base text-white tracking-tight">이미지 매직 (Image Magic)</h4>
-                <p className="text-xs text-slate-300 mt-1 max-w-sm mx-auto leading-relaxed">
-                  100% 브라우저 메모리 안에서 안전하게 동작하는 무료 이미지 도구입니다. 
-                  서버에 파일이 전송되지 않아 개인정보가 안전합니다.
-                </p>
-                <div className="mt-3 inline-flex items-center gap-1.5 text-[11px] text-blue-300 font-semibold bg-blue-900/50 px-3 py-1 rounded-full border border-blue-700/50">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  무제한 무료 변환 & 압축 지원
-                </div>
-              </div>
-            )}
+            <AdUnit slot="download-modal" className="w-full" />
           </div>
         </div>
 
