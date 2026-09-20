@@ -87,6 +87,12 @@ Sitemap: ${baseUrl}/sitemap.xml
 `);
   });
 
+  // Google AdSense /ads.txt
+  app.get('/ads.txt', (req, res) => {
+    res.header('Content-Type', 'text/plain; charset=utf-8');
+    res.send('google.com, pub-3688655520936788, DIRECT, f08c47fec0942fa0\n');
+  });
+
   // Vite middleware setup
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
