@@ -1092,11 +1092,6 @@ export default function App() {
                     {t.contact}
                   </Link>
                 </li>
-                <li>
-                  <Link to="/admin" className="hover:text-slate-800 text-xs text-slate-400 block pt-1">
-                    {locale === 'ko' ? '관리자 로그인' : 'Admin Portal'}
-                  </Link>
-                </li>
               </ul>
             </div>
           </div>
