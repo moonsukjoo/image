@@ -12,17 +12,17 @@ export interface AdSetting {
 }
 
 export const DEFAULT_ADS: AdSetting[] = [
-  { id: 'header', name: '헤더', enabled: true, code: '', description: '상단 네비게이션 주변', device: 'all' },
-  { id: 'top', name: '상단', enabled: true, code: '', description: '페이지 타이틀 아래', device: 'all' },
-  { id: 'content-top', name: '본문 상단', enabled: true, code: '', description: '업로드 영역 위', device: 'all' },
-  { id: 'content-middle', name: '본문 중간', enabled: true, code: '', description: '주요 도구 사이', device: 'all' },
-  { id: 'content-bottom', name: '본문 하단', enabled: true, code: '', description: '사용 방법 위', device: 'all' },
-  { id: 'sidebar', name: '사이드바', enabled: true, code: '', description: '양측 여백', device: 'pc' },
-  { id: 'result-page', name: '결과 페이지', enabled: true, code: '', description: '결과 화면 상/하단', device: 'all' },
-  { id: 'download-area', name: '다운로드 영역', enabled: true, code: '', description: '다운로드 버튼 주변', device: 'all' },
-  { id: 'download-modal', name: '다운로드 팝업 광고', enabled: true, code: '', description: '다운로드 클릭 시 노출되는 모달 광고', device: 'all' },
-  { id: 'mobile-only', name: '모바일 전용', enabled: true, code: '', description: '모바일 화면 하단 고정', device: 'mobile' },
-  { id: 'footer', name: '푸터', enabled: true, code: '', description: '페이지 최하단', device: 'all' },
+  { id: 'header', name: '헤더 (Top Zone)', enabled: true, code: '<!-- Adcash Zone: ozfvlk2bhm -->', description: '상단 네비게이션 주변 (Zone ID: ozfvlk2bhm)', device: 'all' },
+  { id: 'top', name: '상단 (Top Zone)', enabled: true, code: '<!-- Adcash Zone: ozfvlk2bhm -->', description: '페이지 타이틀 아래 (Zone ID: ozfvlk2bhm)', device: 'all' },
+  { id: 'content-top', name: '본문 상단 (Upload Zone)', enabled: true, code: '<!-- Adcash Zone: pcuwr0emuz -->', description: '업로드 영역 위 (Zone ID: pcuwr0emuz)', device: 'all' },
+  { id: 'content-middle', name: '본문 중간 (Tools Zone)', enabled: true, code: '<!-- Adcash Zone: 0dmtbthll4 -->', description: '주요 도구 사이 (Zone ID: 0dmtbthll4)', device: 'all' },
+  { id: 'content-bottom', name: '본문 하단 (Guide Zone)', enabled: true, code: '<!-- Adcash Zone: 0dmtbthll4 -->', description: '사용 방법 위 (Zone ID: 0dmtbthll4)', device: 'all' },
+  { id: 'sidebar', name: '사이드바 (Desktop Zone)', enabled: true, code: '<!-- Adcash Zone: pcuwr0emuz -->', description: '양측 여백 (Zone ID: pcuwr0emuz)', device: 'pc' },
+  { id: 'result-page', name: '결과 페이지 (Result Zone)', enabled: true, code: '<!-- Adcash Zone: uskrsyqnsa -->', description: '결과 화면 상/하단 (Zone ID: uskrsyqnsa)', device: 'all' },
+  { id: 'download-area', name: '다운로드 영역 (Action Zone)', enabled: true, code: '<!-- Adcash Zone: uskrsyqnsa -->', description: '다운로드 버튼 주변 (Zone ID: uskrsyqnsa)', device: 'all' },
+  { id: 'download-modal', name: '다운로드 팝업 광고 (Modal Zone)', enabled: true, code: '<!-- Adcash Zone: uskrsyqnsa -->', description: '다운로드 클릭 시 노출 (Zone ID: uskrsyqnsa)', device: 'all' },
+  { id: 'mobile-only', name: '모바일 전용 (Mobile Zone)', enabled: true, code: '<!-- Adcash Zone: 6v3xe6lgqc -->', description: '모바일 화면 하단 고정 (Zone ID: 6v3xe6lgqc)', device: 'mobile' },
+  { id: 'footer', name: '푸터 (Bottom Zone)', enabled: true, code: '<!-- Adcash Zone: 6v3xe6lgqc -->', description: '페이지 최하단 (Zone ID: 6v3xe6lgqc)', device: 'all' },
 ];
 
 export const ALL_TOOLS: { id: ToolId; name: string }[] = [

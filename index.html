@@ -9,12 +9,23 @@
     <meta property="og:description" content="개인정보 보호, 무설치 브라우저 전용 이미지 처리 서비스" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <!-- Adcash Library & AutoTag -->
+    <!-- Adcash Library & 5 Multi-Zone AutoTags -->
     <script id="aclib" type="text/javascript" src="//acscdn.com/script/aclib.js"></script>
     <script type="text/javascript">
-      aclib.runAutoTag({
-        zoneId: 'pcuwr0emuz',
-      });
+      try {
+        var adcashZones = [
+          'ozfvlk2bhm',
+          'pcuwr0emuz',
+          '0dmtbthll4',
+          'uskrsyqnsa',
+          '6v3xe6lgqc'
+        ];
+        adcashZones.forEach(function(zone) {
+          try {
+            aclib.runAutoTag({ zoneId: zone });
+          } catch (e) {}
+        });
+      } catch (e) {}
     </script>
   </head>
   <body class="bg-gray-50">
