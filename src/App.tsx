@@ -6,7 +6,7 @@ import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom'
 import { 
   Upload, FileImage, FileText, Download, Trash2, 
   RefreshCw, FileArchive, ArrowRight, ArrowRightLeft, Loader2, CheckCircle, AlertCircle, Globe, Maximize, GripVertical, AlertTriangle, Sparkles, Check,
-  ShieldCheck, User, LogOut
+  ShieldCheck, User, LogOut, Crop, RotateCw, SlidersHorizontal, Stamp, EyeOff, Scissors, MessageSquare, ZoomIn, Code
 } from 'lucide-react';
 import { 
   DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent 
@@ -18,7 +18,11 @@ import { CSS } from '@dnd-kit/utilities';
 
 import { cn, formatSize } from './lib/utils';
 import { FileItem, ToolId, ConversionSpec, AppSettings } from './types';
-import { compressImage, convertImage, createPdfFromImages, resizeImage, convertPdfToImages } from './lib/processor';
+import { 
+  compressImage, convertImage, createPdfFromImages, resizeImage, convertPdfToImages,
+  cropImage, rotateAndFlipImage, editPhotoFilters, applyWatermark, applyMosaicBlur,
+  removeImageBackground, createMemeImage, upscaleImageSuperRes, renderHtmlCardToImage
+} from './lib/processor';
 import { AdUnit } from './components/AdUnit';
 import { DownloadAdModal } from './components/DownloadAdModal';
 import { ReuploadAdModal } from './components/ReuploadAdModal';
@@ -37,6 +41,15 @@ const ROUTE_TO_TOOL: Record<string, ToolId> = {
   '/resize-image': 'resize',
   '/image-to-pdf': 'pdf',
   '/pdf-to-image': 'pdf-to-image',
+  '/crop-image': 'crop',
+  '/rotate-image': 'rotate',
+  '/photo-editor': 'photo-editor',
+  '/watermark-image': 'watermark',
+  '/blur-face': 'blur-face',
+  '/remove-background': 'remove-bg',
+  '/meme-generator': 'meme',
+  '/upscale-image': 'upscale',
+  '/html-to-image': 'html-to-image',
   '/jpg-to-png': 'jpg-to-png',
   '/png-to-jpg': 'png-to-jpg',
   '/jpg-to-webp': 'jpg-to-webp',
@@ -111,10 +124,9 @@ export default function App() {
   const toolEnabled = isToolEnabled(activeTool);
 
   const getInitialFormat = (tool: ToolId | null): string => {
-    if (tool === 'compress') return 'compress';
-    if (tool === 'resize') return 'resize';
-    if (tool === 'pdf') return 'pdf';
-    if (tool === 'pdf-to-image') return 'pdf-to-image';
+    if (!tool) return 'png';
+    const directTools = ['compress', 'resize', 'pdf', 'pdf-to-image', 'crop', 'rotate', 'photo-editor', 'watermark', 'blur-face', 'remove-bg', 'meme', 'upscale', 'html-to-image'];
+    if (directTools.includes(tool)) return tool;
     const conv = CONVERSIONS.find(c => c.id === tool);
     return conv ? conv.ext : 'png';
   };
@@ -143,7 +155,30 @@ export default function App() {
     resizeKeepRatio: true,
     resizePercentage: 100,
     resizeFormat: 'image/jpeg',
-    resizeQuality: 85
+    resizeQuality: 85,
+    cropRatio: '1:1',
+    rotateAngle: 0,
+    flipH: false,
+    flipV: false,
+    brightness: 100,
+    contrast: 100,
+    saturation: 100,
+    grayscale: false,
+    sepia: false,
+    blur: 0,
+    invert: false,
+    watermarkText: 'Image Magic',
+    watermarkColor: '#FFFFFF',
+    watermarkSize: 32,
+    watermarkOpacity: 0.6,
+    watermarkPosition: 'bottom-right',
+    mosaicIntensity: 15,
+    removeBgTolerance: 25,
+    memeTopText: '',
+    memeBottomText: '',
+    memeFontSize: 36,
+    upscaleFactor: 2,
+    htmlContent: 'Image Magic Card'
   });
   
   const [isProcessing, setIsProcessing] = useState(false);
@@ -326,6 +361,8 @@ export default function App() {
     }
     if (targetFormat === 'pdf-to-image' || targetFormat === 'pdf-to-jpg') return 'jpg';
     if (targetFormat === 'pdf-to-png') return 'png';
+    if (targetFormat === 'remove-bg') return 'png';
+    if (['crop', 'rotate', 'photo-editor', 'watermark', 'blur-face', 'meme', 'upscale', 'html-to-image'].includes(targetFormat)) return 'png';
     return targetFormat;
   };
 
@@ -438,6 +475,71 @@ export default function App() {
           (p) => {
             setFiles(prev => prev.map(f => f.id === id ? { ...f, progress: p } : f));
           }
+        );
+      } else if (targetFormat === 'crop') {
+        resultBlob = await cropImage(
+          file.originalFile,
+          settings.cropRatio || '1:1',
+          (p: number) => setFiles(prev => prev.map(f => f.id === id ? { ...f, progress: p } : f))
+        );
+      } else if (targetFormat === 'rotate') {
+        resultBlob = await rotateAndFlipImage(
+          file.originalFile,
+          settings.rotateAngle || 0,
+          settings.flipH,
+          settings.flipV,
+          (p: number) => setFiles(prev => prev.map(f => f.id === id ? { ...f, progress: p } : f))
+        );
+      } else if (targetFormat === 'photo-editor') {
+        resultBlob = await editPhotoFilters(
+          file.originalFile,
+          settings,
+          (p: number) => setFiles(prev => prev.map(f => f.id === id ? { ...f, progress: p } : f))
+        );
+      } else if (targetFormat === 'watermark') {
+        resultBlob = await applyWatermark(
+          file.originalFile,
+          {
+            text: settings.watermarkText || 'Watermark',
+            color: settings.watermarkColor || '#FFFFFF',
+            size: settings.watermarkSize || 24,
+            opacity: settings.watermarkOpacity ?? 0.5,
+            position: settings.watermarkPosition || 'bottom-right'
+          },
+          (p: number) => setFiles(prev => prev.map(f => f.id === id ? { ...f, progress: p } : f))
+        );
+      } else if (targetFormat === 'blur-face') {
+        resultBlob = await applyMosaicBlur(
+          file.originalFile,
+          settings.mosaicIntensity || 15,
+          (p: number) => setFiles(prev => prev.map(f => f.id === id ? { ...f, progress: p } : f))
+        );
+      } else if (targetFormat === 'remove-bg') {
+        resultBlob = await removeImageBackground(
+          file.originalFile,
+          settings.removeBgTolerance || 25,
+          (p: number) => setFiles(prev => prev.map(f => f.id === id ? { ...f, progress: p } : f))
+        );
+      } else if (targetFormat === 'meme') {
+        resultBlob = await createMemeImage(
+          file.originalFile,
+          {
+            topText: settings.memeTopText || '',
+            bottomText: settings.memeBottomText || '',
+            fontSize: settings.memeFontSize || 36
+          },
+          (p: number) => setFiles(prev => prev.map(f => f.id === id ? { ...f, progress: p } : f))
+        );
+      } else if (targetFormat === 'upscale') {
+        resultBlob = await upscaleImageSuperRes(
+          file.originalFile,
+          settings.upscaleFactor || 2,
+          (p: number) => setFiles(prev => prev.map(f => f.id === id ? { ...f, progress: p } : f))
+        );
+      } else if (targetFormat === 'html-to-image') {
+        resultBlob = await renderHtmlCardToImage(
+          settings.htmlContent || 'Image Magic Announcement Card',
+          (p: number) => setFiles(prev => prev.map(f => f.id === id ? { ...f, progress: p } : f))
         );
       } else if (targetFormat === 'pdf-to-image' || targetFormat === 'pdf-to-jpg' || targetFormat === 'pdf-to-png') {
         const mime = targetFormat === 'pdf-to-png' ? 'image/png' : 'image/jpeg';
@@ -730,33 +832,69 @@ export default function App() {
             <AdUnit slot="content-top" height="h-20 md:h-28" />
 
             <section>
-              <h3 className="text-xl font-bold text-slate-900 mb-6">
-                {t.featuredTools}
+              <h3 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                <Sparkles className="text-blue-600" size={20} /> {t.featuredTools}
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Link to={TOOL_TO_ROUTE['compress']} className={cn("flex flex-col items-center p-6 bg-white rounded-2xl border transition-all text-center group relative overflow-hidden", isToolEnabled('compress') ? "border-slate-200/80 hover:border-blue-400 hover:shadow-md" : "border-slate-200 opacity-60 pointer-events-none")}>
                   <div className={cn("p-4 rounded-2xl mb-4 transition-transform", isToolEnabled('compress') ? "bg-blue-50 text-blue-600 group-hover:scale-105" : "bg-slate-100 text-slate-400")}><FileArchive size={30} /></div>
                   <h4 className="font-bold text-slate-900">{t.navCompress}</h4>
                   <p className="text-xs text-slate-500 mt-1">{locale === 'ko' ? '화질 저하 없이 용량 최적화' : 'Smart compression without quality loss'}</p>
-                  {!isToolEnabled('compress') && <div className="absolute inset-0 bg-slate-50/80 backdrop-blur-[1px] flex items-center justify-center"><span className="bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">점검 중</span></div>}
                 </Link>
                 <Link to={TOOL_TO_ROUTE['resize']} className={cn("flex flex-col items-center p-6 bg-white rounded-2xl border transition-all text-center group relative overflow-hidden", isToolEnabled('resize') ? "border-slate-200/80 hover:border-blue-400 hover:shadow-md" : "border-slate-200 opacity-60 pointer-events-none")}>
                   <div className={cn("p-4 rounded-2xl mb-4 transition-transform", isToolEnabled('resize') ? "bg-blue-50 text-blue-600 group-hover:scale-105" : "bg-slate-100 text-slate-400")}><Maximize size={30} /></div>
                   <h4 className="font-bold text-slate-900">{t.navResize}</h4>
                   <p className="text-xs text-slate-500 mt-1">{locale === 'ko' ? '원하는 크기 및 비율로 조절' : 'Custom width, height & ratio'}</p>
-                  {!isToolEnabled('resize') && <div className="absolute inset-0 bg-slate-50/80 backdrop-blur-[1px] flex items-center justify-center"><span className="bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">점검 중</span></div>}
+                </Link>
+                <Link to={TOOL_TO_ROUTE['crop']} className={cn("flex flex-col items-center p-6 bg-white rounded-2xl border transition-all text-center group relative overflow-hidden", isToolEnabled('crop') ? "border-slate-200/80 hover:border-blue-400 hover:shadow-md" : "border-slate-200 opacity-60 pointer-events-none")}>
+                  <div className={cn("p-4 rounded-2xl mb-4 transition-transform", isToolEnabled('crop') ? "bg-blue-50 text-blue-600 group-hover:scale-105" : "bg-slate-100 text-slate-400")}><Crop size={30} /></div>
+                  <h4 className="font-bold text-slate-900">{locale === 'ko' ? '이미지 자르기' : 'Crop Image'}</h4>
+                  <p className="text-xs text-slate-500 mt-1">{locale === 'ko' ? '1:1, 16:9, 9:16 원하는 비율 크롭' : 'Crop to standard aspect ratios'}</p>
+                </Link>
+                <Link to={TOOL_TO_ROUTE['remove-bg']} className={cn("flex flex-col items-center p-6 bg-white rounded-2xl border transition-all text-center group relative overflow-hidden", isToolEnabled('remove-bg') ? "border-slate-200/80 hover:border-blue-400 hover:shadow-md" : "border-slate-200 opacity-60 pointer-events-none")}>
+                  <div className={cn("p-4 rounded-2xl mb-4 transition-transform", isToolEnabled('remove-bg') ? "bg-blue-50 text-blue-600 group-hover:scale-105" : "bg-slate-100 text-slate-400")}><Scissors size={30} /></div>
+                  <h4 className="font-bold text-slate-900">{locale === 'ko' ? '배경 제거 (누끼)' : 'Remove Background'}</h4>
+                  <p className="text-xs text-slate-500 mt-1">{locale === 'ko' ? '투명 PNG 배경 즉시 분리' : 'Create transparent PNG cutouts'}</p>
+                </Link>
+                <Link to={TOOL_TO_ROUTE['rotate']} className={cn("flex flex-col items-center p-6 bg-white rounded-2xl border transition-all text-center group relative overflow-hidden", isToolEnabled('rotate') ? "border-slate-200/80 hover:border-blue-400 hover:shadow-md" : "border-slate-200 opacity-60 pointer-events-none")}>
+                  <div className={cn("p-4 rounded-2xl mb-4 transition-transform", isToolEnabled('rotate') ? "bg-blue-50 text-blue-600 group-hover:scale-105" : "bg-slate-100 text-slate-400")}><RotateCw size={30} /></div>
+                  <h4 className="font-bold text-slate-900">{locale === 'ko' ? '회전 & 거울 반전' : 'Rotate & Flip'}</h4>
+                  <p className="text-xs text-slate-500 mt-1">{locale === 'ko' ? '90°/180° 회전 및 좌우상하 반전' : '90° turn and mirror flip'}</p>
+                </Link>
+                <Link to={TOOL_TO_ROUTE['photo-editor']} className={cn("flex flex-col items-center p-6 bg-white rounded-2xl border transition-all text-center group relative overflow-hidden", isToolEnabled('photo-editor') ? "border-slate-200/80 hover:border-blue-400 hover:shadow-md" : "border-slate-200 opacity-60 pointer-events-none")}>
+                  <div className={cn("p-4 rounded-2xl mb-4 transition-transform", isToolEnabled('photo-editor') ? "bg-blue-50 text-blue-600 group-hover:scale-105" : "bg-slate-100 text-slate-400")}><SlidersHorizontal size={30} /></div>
+                  <h4 className="font-bold text-slate-900">{locale === 'ko' ? '포토 에디터 & 필터' : 'Photo Editor'}</h4>
+                  <p className="text-xs text-slate-500 mt-1">{locale === 'ko' ? '밝기, 대비, 채도, 흑백, 세피아' : 'Adjust brightness, contrast & filters'}</p>
+                </Link>
+                <Link to={TOOL_TO_ROUTE['watermark']} className={cn("flex flex-col items-center p-6 bg-white rounded-2xl border transition-all text-center group relative overflow-hidden", isToolEnabled('watermark') ? "border-slate-200/80 hover:border-blue-400 hover:shadow-md" : "border-slate-200 opacity-60 pointer-events-none")}>
+                  <div className={cn("p-4 rounded-2xl mb-4 transition-transform", isToolEnabled('watermark') ? "bg-blue-50 text-blue-600 group-hover:scale-105" : "bg-slate-100 text-slate-400")}><Stamp size={30} /></div>
+                  <h4 className="font-bold text-slate-900">{locale === 'ko' ? '워터마크 서명' : 'Watermark'}</h4>
+                  <p className="text-xs text-slate-500 mt-1">{locale === 'ko' ? '저작권 텍스트 서명 삽입' : 'Add text signature & copyright'}</p>
+                </Link>
+                <Link to={TOOL_TO_ROUTE['blur-face']} className={cn("flex flex-col items-center p-6 bg-white rounded-2xl border transition-all text-center group relative overflow-hidden", isToolEnabled('blur-face') ? "border-slate-200/80 hover:border-blue-400 hover:shadow-md" : "border-slate-200 opacity-60 pointer-events-none")}>
+                  <div className={cn("p-4 rounded-2xl mb-4 transition-transform", isToolEnabled('blur-face') ? "bg-blue-50 text-blue-600 group-hover:scale-105" : "bg-slate-100 text-slate-400")}><EyeOff size={30} /></div>
+                  <h4 className="font-bold text-slate-900">{locale === 'ko' ? '얼굴 모자이크 & 블러' : 'Blur & Mosaic'}</h4>
+                  <p className="text-xs text-slate-500 mt-1">{locale === 'ko' ? '프라이버시 및 번호판 가리기' : 'Protect privacy & sensitive data'}</p>
+                </Link>
+                <Link to={TOOL_TO_ROUTE['meme']} className={cn("flex flex-col items-center p-6 bg-white rounded-2xl border transition-all text-center group relative overflow-hidden", isToolEnabled('meme') ? "border-slate-200/80 hover:border-blue-400 hover:shadow-md" : "border-slate-200 opacity-60 pointer-events-none")}>
+                  <div className={cn("p-4 rounded-2xl mb-4 transition-transform", isToolEnabled('meme') ? "bg-blue-50 text-blue-600 group-hover:scale-105" : "bg-slate-100 text-slate-400")}><MessageSquare size={30} /></div>
+                  <h4 className="font-bold text-slate-900">{locale === 'ko' ? '밈(Meme) 생성기' : 'Meme Generator'}</h4>
+                  <p className="text-xs text-slate-500 mt-1">{locale === 'ko' ? '상하단 자막 짤방 제작' : 'Add bold Impact captions'}</p>
+                </Link>
+                <Link to={TOOL_TO_ROUTE['upscale']} className={cn("flex flex-col items-center p-6 bg-white rounded-2xl border transition-all text-center group relative overflow-hidden", isToolEnabled('upscale') ? "border-slate-200/80 hover:border-blue-400 hover:shadow-md" : "border-slate-200 opacity-60 pointer-events-none")}>
+                  <div className={cn("p-4 rounded-2xl mb-4 transition-transform", isToolEnabled('upscale') ? "bg-blue-50 text-blue-600 group-hover:scale-105" : "bg-slate-100 text-slate-400")}><ZoomIn size={30} /></div>
+                  <h4 className="font-bold text-slate-900">{locale === 'ko' ? '업스케일 (2x, 4x)' : 'Upscale Image'}</h4>
+                  <p className="text-xs text-slate-500 mt-1">{locale === 'ko' ? '깨짐 없는 초고해상도 확대' : 'Enlarge 2x, 4x super resolution'}</p>
                 </Link>
                 <Link to={TOOL_TO_ROUTE['pdf']} className={cn("flex flex-col items-center p-6 bg-white rounded-2xl border transition-all text-center group relative overflow-hidden", isToolEnabled('pdf') ? "border-slate-200/80 hover:border-blue-400 hover:shadow-md" : "border-slate-200 opacity-60 pointer-events-none")}>
                   <div className={cn("p-4 rounded-2xl mb-4 transition-transform", isToolEnabled('pdf') ? "bg-blue-50 text-blue-600 group-hover:scale-105" : "bg-slate-100 text-slate-400")}><FileText size={30} /></div>
                   <h4 className="font-bold text-slate-900">{t.navPdf}</h4>
                   <p className="text-xs text-slate-500 mt-1">{locale === 'ko' ? '여러 장의 이미지를 PDF로 병합' : 'Merge multiple images into single PDF'}</p>
-                  {!isToolEnabled('pdf') && <div className="absolute inset-0 bg-slate-50/80 backdrop-blur-[1px] flex items-center justify-center"><span className="bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">점검 중</span></div>}
                 </Link>
                 <Link to={TOOL_TO_ROUTE['pdf-to-image']} className={cn("flex flex-col items-center p-6 bg-white rounded-2xl border transition-all text-center group relative overflow-hidden", isToolEnabled('pdf-to-image') ? "border-slate-200/80 hover:border-blue-400 hover:shadow-md" : "border-slate-200 opacity-60 pointer-events-none")}>
                   <div className={cn("p-4 rounded-2xl mb-4 transition-transform", isToolEnabled('pdf-to-image') ? "bg-blue-50 text-blue-600 group-hover:scale-105" : "bg-slate-100 text-slate-400")}><FileImage size={30} /></div>
                   <h4 className="font-bold text-slate-900">{t.navPdfToImage}</h4>
                   <p className="text-xs text-slate-500 mt-1">{locale === 'ko' ? 'PDF 페이지를 고화질 이미지로 추출' : 'Extract PDF pages to high-res images'}</p>
-                  {!isToolEnabled('pdf-to-image') && <div className="absolute inset-0 bg-slate-50/80 backdrop-blur-[1px] flex items-center justify-center"><span className="bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">점검 중</span></div>}
                 </Link>
               </div>
             </section>

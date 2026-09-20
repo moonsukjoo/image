@@ -1,6 +1,5 @@
 User-agent: *
 Allow: /
-Disallow: /admin
-Disallow: /login
 
-Sitemap: https://image-1ri.pages.dev/sitemap.xml
+# Sitemaps
+Sitemap: https://imagemagic.app/sitemap.xml

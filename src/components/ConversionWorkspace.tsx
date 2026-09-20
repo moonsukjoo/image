@@ -15,6 +15,7 @@ import { FileItem, AppSettings } from '../types';
 import { cn, formatSize } from '../lib/utils';
 import { AdUnit } from './AdUnit';
 import { SupportedLocale, getTranslations } from '../lib/i18n';
+import { InteractiveLiveEditor } from './InteractiveLiveEditor';
 
 interface ConversionWorkspaceProps {
   files: FileItem[];
@@ -112,11 +113,17 @@ export const ConversionWorkspace: React.FC<ConversionWorkspaceProps> = ({
     { id: 'png', name: 'PNG', badge: locale === 'ko' ? '고화질·투명' : 'Lossless', desc: locale === 'ko' ? '무손실 투명 배경 지원' : 'Lossless transparent support' },
     { id: 'jpg', name: 'JPG', badge: locale === 'ko' ? '표준 호환성' : 'Standard', desc: locale === 'ko' ? '가장 널리 쓰이는 표준 형식' : 'Universal photo format' },
     { id: 'webp', name: 'WEBP', badge: locale === 'ko' ? '초경량 웹' : 'Ultra-light', desc: locale === 'ko' ? '구글 권장 고효율 포맷' : 'Next-gen high efficiency' },
-    { id: 'pdf', name: 'PDF', badge: locale === 'ko' ? '문서화' : 'Document', desc: locale === 'ko' ? '이미지들을 단일 PDF로' : 'Merge images into single PDF' },
     { id: 'compress', name: locale === 'ko' ? '용량 압축' : 'Compress', badge: locale === 'ko' ? '최적화' : 'Optimize', desc: locale === 'ko' ? '화질 유지 용량 다이어트' : 'Reduce file size smartly' },
-    { id: 'resize', name: locale === 'ko' ? '리사이즈' : 'Resize', badge: locale === 'ko' ? '해상도' : 'Dimensions', desc: locale === 'ko' ? '가로/세로 픽셀 크기 조절' : 'Change width & height pixels' },
-    { id: 'gif', name: 'GIF', badge: locale === 'ko' ? '웹그래픽' : 'Graphic', desc: locale === 'ko' ? '정지 프레임 이미지' : 'Still frame graphic' },
-    { id: 'bmp', name: 'BMP', badge: locale === 'ko' ? '비트맵' : 'Bitmap', desc: locale === 'ko' ? '압축 없는 비트맵' : 'Uncompressed bitmap' },
+    { id: 'resize', name: locale === 'ko' ? '크기 조절' : 'Resize', badge: locale === 'ko' ? '해상도' : 'Dimensions', desc: locale === 'ko' ? '가로/세로 픽셀 크기 조절' : 'Change width & height pixels' },
+    { id: 'crop', name: locale === 'ko' ? '잘라내기' : 'Crop', badge: locale === 'ko' ? '크롭' : 'Crop', desc: locale === 'ko' ? '비율 및 영역 잘라내기' : 'Trim unwanted photo areas' },
+    { id: 'rotate', name: locale === 'ko' ? '회전·반전' : 'Rotate', badge: locale === 'ko' ? '방향' : 'Orient', desc: locale === 'ko' ? '90° 회전 및 거울 반전' : '90° rotate and flip' },
+    { id: 'photo-editor', name: locale === 'ko' ? '포토 에디터' : 'Editor', badge: locale === 'ko' ? '필터' : 'Filter', desc: locale === 'ko' ? '밝기, 대비, 흑백, 블러' : 'Adjust colors & filters' },
+    { id: 'watermark', name: locale === 'ko' ? '워터마크' : 'Watermark', badge: locale === 'ko' ? '보호' : 'Brand', desc: locale === 'ko' ? '텍스트 서명 삽입' : 'Add text signature/logo' },
+    { id: 'blur-face', name: locale === 'ko' ? '얼굴 흐리기' : 'Mosaic', badge: locale === 'ko' ? '프라이버시' : 'Privacy', desc: locale === 'ko' ? '모자이크 블러 처리' : 'Conceal faces & numbers' },
+    { id: 'remove-bg', name: locale === 'ko' ? '배경 제거' : 'Remove BG', badge: locale === 'ko' ? '누끼' : 'Cutout', desc: locale === 'ko' ? '투명 PNG 배경 분리' : 'Create transparent PNG' },
+    { id: 'meme', name: locale === 'ko' ? '밈 만들기' : 'Meme', badge: locale === 'ko' ? '짤 생성' : 'Meme', desc: locale === 'ko' ? '자막 텍스트 밈 생성' : 'Impact caption maker' },
+    { id: 'upscale', name: locale === 'ko' ? '업스케일' : 'Upscale', badge: locale === 'ko' ? '고해상도' : 'SuperRes', desc: locale === 'ko' ? '2x, 4x 해상도 확대' : 'Enlarge 2x, 4x cleanly' },
+    { id: 'pdf', name: 'PDF', badge: locale === 'ko' ? '문서화' : 'Document', desc: locale === 'ko' ? '이미지들을 단일 PDF로' : 'Merge images into single PDF' },
   ];
 
   const pdfFormats = [
@@ -271,6 +278,19 @@ export const ConversionWorkspace: React.FC<ConversionWorkspaceProps> = ({
           })}
         </div>
 
+        {/* Real-time Interactive Live Editor & Preview on user's uploaded image */}
+        {['photo-editor', 'watermark', 'blur-face', 'remove-bg', 'meme', 'rotate', 'crop', 'resize', 'upscale'].includes(targetFormat) && (
+          <div className="mb-6">
+            <InteractiveLiveEditor
+              files={files}
+              targetFormat={targetFormat}
+              settings={settings}
+              setSettings={setSettings}
+              locale={locale}
+            />
+          </div>
+        )}
+
         {/* Settings for selected format */}
         {targetFormat === 'compress' && (
           <div className="mb-6 p-4 md:p-5 bg-slate-50 border border-slate-200 rounded-2xl">
@@ -374,6 +394,371 @@ export const ConversionWorkspace: React.FC<ConversionWorkspaceProps> = ({
                   <option value="40">{locale === 'ko' ? '넓은 여백 (40px)' : 'Wide (40px)'}</option>
                 </select>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Crop Settings */}
+        {targetFormat === 'crop' && (
+          <div className="mb-6 p-4 md:p-5 bg-slate-50 border border-slate-200 rounded-2xl">
+            <label className="block text-xs font-bold text-slate-700 mb-2">
+              {locale === 'ko' ? '자르기 비율 선택' : 'Select Crop Aspect Ratio'}
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+              {[
+                { id: '1:1', label: '1:1 정사각형', sub: '인스타그램' },
+                { id: '16:9', label: '16:9 와이드', sub: '유튜브/가로' },
+                { id: '4:3', label: '4:3 표준', sub: '일반 사진' },
+                { id: '9:16', label: '9:16 숏폼', sub: '릴스/쇼츠' },
+                { id: 'free', label: '자유 영역', sub: '맞춤 비율' }
+              ].map(r => (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => setSettings(s => ({ ...s, cropRatio: r.id as any }))}
+                  className={cn(
+                    "p-2.5 text-center rounded-xl border transition-all text-xs cursor-pointer",
+                    settings.cropRatio === r.id
+                      ? "bg-blue-600 text-white border-blue-600 shadow-sm font-bold"
+                      : "bg-white text-slate-700 border-slate-200 hover:border-blue-300 font-medium"
+                  )}
+                >
+                  <div className="font-bold">{r.label}</div>
+                  <div className={cn("text-[10px]", settings.cropRatio === r.id ? "text-blue-100" : "text-slate-400")}>{r.sub}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Rotate & Flip Settings */}
+        {targetFormat === 'rotate' && (
+          <div className="mb-6 p-4 md:p-5 bg-slate-50 border border-slate-200 rounded-2xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-2">
+                  {locale === 'ko' ? '회전 각도' : 'Rotation Angle'}
+                </label>
+                <div className="flex gap-2">
+                  {[0, 90, 180, 270].map(deg => (
+                    <button
+                      key={deg}
+                      type="button"
+                      onClick={() => setSettings(s => ({ ...s, rotateAngle: deg }))}
+                      className={cn(
+                        "flex-1 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer",
+                        settings.rotateAngle === deg
+                          ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                          : "bg-white text-slate-700 border-slate-200 hover:border-blue-300"
+                      )}
+                    >
+                      {deg}°
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-2">
+                  {locale === 'ko' ? '반전 (거울 뒤집기)' : 'Mirror Flip'}
+                </label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSettings(s => ({ ...s, flipH: !s.flipH }))}
+                    className={cn(
+                      "flex-1 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer",
+                      settings.flipH
+                        ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                        : "bg-white text-slate-700 border-slate-200 hover:border-blue-300"
+                    )}
+                  >
+                    {locale === 'ko' ? '좌우 반전 ↔' : 'Flip Horizontal'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSettings(s => ({ ...s, flipV: !s.flipV }))}
+                    className={cn(
+                      "flex-1 py-2 rounded-xl border text-xs font-bold transition-all cursor-pointer",
+                      settings.flipV
+                        ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                        : "bg-white text-slate-700 border-slate-200 hover:border-blue-300"
+                    )}
+                  >
+                    {locale === 'ko' ? '상하 반전 ↕' : 'Flip Vertical'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Photo Editor Settings */}
+        {targetFormat === 'photo-editor' && (
+          <div className="mb-6 p-4 md:p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <div className="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                  <span>{locale === 'ko' ? '밝기 (Brightness)' : 'Brightness'}</span>
+                  <span>{settings.brightness}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="30"
+                  max="170"
+                  value={settings.brightness}
+                  onChange={(e) => setSettings(s => ({ ...s, brightness: Number(e.target.value) }))}
+                  className="w-full accent-blue-600 h-2 bg-slate-200 rounded-lg cursor-pointer"
+                />
+              </div>
+              <div>
+                <div className="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                  <span>{locale === 'ko' ? '대비 (Contrast)' : 'Contrast'}</span>
+                  <span>{settings.contrast}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="30"
+                  max="170"
+                  value={settings.contrast}
+                  onChange={(e) => setSettings(s => ({ ...s, contrast: Number(e.target.value) }))}
+                  className="w-full accent-blue-600 h-2 bg-slate-200 rounded-lg cursor-pointer"
+                />
+              </div>
+              <div>
+                <div className="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                  <span>{locale === 'ko' ? '채도 (Saturation)' : 'Saturation'}</span>
+                  <span>{settings.saturation}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="200"
+                  value={settings.saturation}
+                  onChange={(e) => setSettings(s => ({ ...s, saturation: Number(e.target.value) }))}
+                  className="w-full accent-blue-600 h-2 bg-slate-200 rounded-lg cursor-pointer"
+                />
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-200">
+              <button
+                type="button"
+                onClick={() => setSettings(s => ({ ...s, grayscale: !s.grayscale }))}
+                className={cn("px-3 py-1.5 rounded-xl border text-xs font-bold cursor-pointer transition-all", settings.grayscale ? "bg-slate-800 text-white border-slate-800" : "bg-white text-slate-700 border-slate-200")}
+              >
+                {locale === 'ko' ? '흑백 모드' : 'Grayscale'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setSettings(s => ({ ...s, sepia: !s.sepia }))}
+                className={cn("px-3 py-1.5 rounded-xl border text-xs font-bold cursor-pointer transition-all", settings.sepia ? "bg-amber-700 text-white border-amber-700" : "bg-white text-slate-700 border-slate-200")}
+              >
+                {locale === 'ko' ? '빈티지 세피아' : 'Sepia'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setSettings(s => ({ ...s, invert: !s.invert }))}
+                className={cn("px-3 py-1.5 rounded-xl border text-xs font-bold cursor-pointer transition-all", settings.invert ? "bg-purple-700 text-white border-purple-700" : "bg-white text-slate-700 border-slate-200")}
+              >
+                {locale === 'ko' ? '색상 반전' : 'Invert'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setSettings(s => ({ ...s, brightness: 100, contrast: 100, saturation: 100, grayscale: false, sepia: false, invert: false }))}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-500 hover:text-slate-800 text-xs font-medium cursor-pointer ml-auto"
+              >
+                {locale === 'ko' ? '필터 초기화' : 'Reset'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Watermark Settings */}
+        {targetFormat === 'watermark' && (
+          <div className="mb-6 p-4 md:p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  {locale === 'ko' ? '워터마크 텍스트' : 'Watermark Text'}
+                </label>
+                <input
+                  type="text"
+                  value={settings.watermarkText}
+                  onChange={(e) => setSettings(s => ({ ...s, watermarkText: e.target.value }))}
+                  placeholder="© 2025 Image Magic"
+                  className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  {locale === 'ko' ? '워터마크 위치' : 'Watermark Position'}
+                </label>
+                <select
+                  value={settings.watermarkPosition}
+                  onChange={(e) => setSettings(s => ({ ...s, watermarkPosition: e.target.value as any }))}
+                  className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-xl font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                >
+                  <option value="bottom-right">{locale === 'ko' ? '우측 하단 (권장)' : 'Bottom Right'}</option>
+                  <option value="center">{locale === 'ko' ? '중앙' : 'Center'}</option>
+                  <option value="bottom-left">{locale === 'ko' ? '좌측 하단' : 'Bottom Left'}</option>
+                  <option value="top-right">{locale === 'ko' ? '우측 상단' : 'Top Right'}</option>
+                  <option value="top-left">{locale === 'ko' ? '좌측 상단' : 'Top Left'}</option>
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <div>
+                <div className="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                  <span>{locale === 'ko' ? '투명도' : 'Opacity'}</span>
+                  <span>{Math.round(settings.watermarkOpacity * 100)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="1.0"
+                  step="0.05"
+                  value={settings.watermarkOpacity}
+                  onChange={(e) => setSettings(s => ({ ...s, watermarkOpacity: Number(e.target.value) }))}
+                  className="w-full accent-blue-600 h-2 bg-slate-200 rounded-lg cursor-pointer"
+                />
+              </div>
+              <div>
+                <div className="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                  <span>{locale === 'ko' ? '글자 크기' : 'Font Size'}</span>
+                  <span>{settings.watermarkSize}px</span>
+                </div>
+                <input
+                  type="range"
+                  min="16"
+                  max="72"
+                  step="2"
+                  value={settings.watermarkSize}
+                  onChange={(e) => setSettings(s => ({ ...s, watermarkSize: Number(e.target.value) }))}
+                  className="w-full accent-blue-600 h-2 bg-slate-200 rounded-lg cursor-pointer"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Blur Face Settings */}
+        {targetFormat === 'blur-face' && (
+          <div className="mb-6 p-4 md:p-5 bg-slate-50 border border-slate-200 rounded-2xl">
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-xs font-bold text-slate-700">{locale === 'ko' ? '모자이크 & 블러 강도' : 'Mosaic Intensity'}</label>
+              <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
+                {settings.mosaicIntensity}px
+              </span>
+            </div>
+            <input
+              type="range"
+              min="5"
+              max="50"
+              step="2"
+              value={settings.mosaicIntensity}
+              onChange={(e) => setSettings(s => ({ ...s, mosaicIntensity: Number(e.target.value) }))}
+              className="w-full accent-blue-600 h-2 bg-slate-200 rounded-lg cursor-pointer"
+            />
+            <div className="flex justify-between text-[11px] text-slate-400 mt-1.5">
+              <span>{locale === 'ko' ? '가벼운 블러' : 'Light Blur'}</span>
+              <span>{locale === 'ko' ? '강력한 모자이크 (얼굴/번호판 차단)' : 'Heavy Mosaic Shield'}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Remove Background Settings */}
+        {targetFormat === 'remove-bg' && (
+          <div className="mb-6 p-4 md:p-5 bg-slate-50 border border-slate-200 rounded-2xl">
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-xs font-bold text-slate-700">{locale === 'ko' ? '배경 감지 허용 오차 (민감도)' : 'Background Color Tolerance'}</label>
+              <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-100">
+                {settings.removeBgTolerance}%
+              </span>
+            </div>
+            <input
+              type="range"
+              min="5"
+              max="60"
+              step="2"
+              value={settings.removeBgTolerance}
+              onChange={(e) => setSettings(s => ({ ...s, removeBgTolerance: Number(e.target.value) }))}
+              className="w-full accent-blue-600 h-2 bg-slate-200 rounded-lg cursor-pointer"
+            />
+            <div className="flex justify-between text-[11px] text-slate-400 mt-1.5">
+              <span>{locale === 'ko' ? '정밀 단색 분리' : 'Exact match'}</span>
+              <span>{locale === 'ko' ? '광범위 배경 분리 (투명 PNG 생성)' : 'Wide match (Transparent PNG)'}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Meme Generator Settings */}
+        {targetFormat === 'meme' && (
+          <div className="mb-6 p-4 md:p-5 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">{locale === 'ko' ? '상단 자막 (Top Text)' : 'Top Caption'}</label>
+                <input
+                  type="text"
+                  value={settings.memeTopText}
+                  onChange={(e) => setSettings(s => ({ ...s, memeTopText: e.target.value }))}
+                  placeholder="WHAT IF I TOLD YOU"
+                  className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-xl font-bold uppercase focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">{locale === 'ko' ? '하단 자막 (Bottom Text)' : 'Bottom Caption'}</label>
+                <input
+                  type="text"
+                  value={settings.memeBottomText}
+                  onChange={(e) => setSettings(s => ({ ...s, memeBottomText: e.target.value }))}
+                  placeholder="IT'S 100% FREE AND FAST"
+                  className="w-full px-3 py-2 text-sm bg-white border border-slate-300 rounded-xl font-bold uppercase focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                />
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-xs font-bold text-slate-700 mb-1">
+                <span>{locale === 'ko' ? '자막 글씨 크기' : 'Caption Font Size'}</span>
+                <span>{settings.memeFontSize}px</span>
+              </div>
+              <input
+                type="range"
+                min="20"
+                max="60"
+                step="2"
+                value={settings.memeFontSize}
+                onChange={(e) => setSettings(s => ({ ...s, memeFontSize: Number(e.target.value) }))}
+                className="w-full accent-blue-600 h-2 bg-slate-200 rounded-lg cursor-pointer"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Upscale Settings */}
+        {targetFormat === 'upscale' && (
+          <div className="mb-6 p-4 md:p-5 bg-slate-50 border border-slate-200 rounded-2xl">
+            <label className="block text-xs font-bold text-slate-700 mb-2">
+              {locale === 'ko' ? '업스케일 해상도 배율 선택' : 'Select Upscale Factor'}
+            </label>
+            <div className="flex gap-3">
+              {[
+                { factor: 2, label: '2X 해상도 확대', sub: '2배 선명화 (권장)' },
+                { factor: 4, label: '4X 울트라 HD', sub: '4배 초고화질 확대' }
+              ].map(item => (
+                <button
+                  key={item.factor}
+                  type="button"
+                  onClick={() => setSettings(s => ({ ...s, upscaleFactor: item.factor as any }))}
+                  className={cn(
+                    "flex-1 p-3 rounded-xl border text-center transition-all cursor-pointer",
+                    settings.upscaleFactor === item.factor
+                      ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                      : "bg-white text-slate-700 border-slate-200 hover:border-blue-300"
+                  )}
+                >
+                  <div className="font-bold text-sm">{item.label}</div>
+                  <div className={cn("text-xs mt-0.5", settings.upscaleFactor === item.factor ? "text-blue-100" : "text-slate-400")}>{item.sub}</div>
+                </button>
+              ))}
             </div>
           </div>
         )}

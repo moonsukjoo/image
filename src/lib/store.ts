@@ -27,7 +27,16 @@ export const DEFAULT_ADS: AdSetting[] = [
 
 export const ALL_TOOLS: { id: ToolId; name: string }[] = [
   { id: 'compress', name: '이미지 압축' },
-  { id: 'resize', name: '이미지 리사이즈' },
+  { id: 'resize', name: '이미지 크기 조절' },
+  { id: 'crop', name: '이미지 잘라내기' },
+  { id: 'rotate', name: '이미지 회전 & 반전' },
+  { id: 'photo-editor', name: '포토 에디터 & 필터' },
+  { id: 'watermark', name: '워터마크 이미지' },
+  { id: 'blur-face', name: '얼굴 흐리기 (모자이크)' },
+  { id: 'remove-bg', name: '배경 제거 (누끼)' },
+  { id: 'meme', name: '밈 만들기' },
+  { id: 'upscale', name: '이미지 업스케일' },
+  { id: 'html-to-image', name: 'HTML에서 이미지' },
   { id: 'pdf', name: '이미지 → PDF' },
   { id: 'pdf-to-image', name: 'PDF → 이미지' },
   { id: 'jpg-to-png', name: 'JPG → PNG' },

@@ -183,6 +183,141 @@ export const MULTI_LANG_SEO: Record<SupportedLocale, Record<string, SeoContent>>
       faq: [
         { q: '투명 배경이 유지되나요?', a: '네, 원본 WEBP에 투명 배경이 있다면 변환된 PNG에서도 투명 배경이 그대로 유지됩니다.' }
       ]
+    },
+    'crop': {
+      title: '이미지 잘라내기 - 픽셀 영역 지정 무료 크롭 툴',
+      description: '이미지의 불필요한 부분을 잘라내고 원하는 비율(1:1, 16:9, 4:3, 9:16)로 스마트하게 크롭하세요.',
+      keywords: '이미지 자르기, 사진 크롭, 이미지 잘라내기, crop image, 사진 자르기 툴',
+      h1: '이미지 잘라내기 (Crop)',
+      subDescription: '인스타그램, 유튜브 썸네일, 쇼츠에 맞게 사진의 원하는 영역만 손쉽게 잘라내세요.',
+      howToUse: [
+        '자르고 싶은 이미지를 업로드합니다.',
+        '원하는 비율(1:1 정사각형, 16:9, 4:3 등)을 선택합니다.',
+        '자르기 완료 후 결과 이미지를 다운로드합니다.'
+      ],
+      faq: [
+        { q: '자른 후 화질이 저하되나요?', a: '아닙니다! 지정한 원본 픽셀 그대로 무손실 렌더링되므로 선명한 화질이 유지됩니다.' }
+      ]
+    },
+    'rotate': {
+      title: '이미지 회전 및 반전 - 90도/180도 회전, 좌우/상하 뒤집기',
+      description: '돌아간 사진을 90도, 180도, 270도 회전하거나 좌우/상하로 반전(뒤집기)하세요.',
+      keywords: '이미지 회전, 사진 돌리기, 좌우 반전, 상하 뒤집기, rotate image',
+      h1: '이미지 회전 및 반전',
+      subDescription: '스마트폰으로 잘못 찍힌 사진의 방향을 바로잡거나 거울 모드로 반전하세요.',
+      howToUse: [
+        '회전할 이미지를 업로드합니다.',
+        '회전 각도(90°, 180°, 270°) 또는 반전(좌우/상하)을 선택합니다.',
+        '완료된 이미지를 저장합니다.'
+      ],
+      faq: [
+        { q: '여러 장의 사진을 한 번에 회전할 수 있나요?', a: '네, 여러 파일을 동시에 올려 동일한 각도로 일괄 회전할 수 있습니다.' }
+      ]
+    },
+    'photo-editor': {
+      title: '포토 에디터 & 필터 - 밝기, 대비, 채도, 흑백, 블러 효과',
+      description: '설치 없이 웹 브라우저에서 밝기, 대비, 채도를 조절하고 흑백/세피아/블러 필터를 적용하세요.',
+      keywords: '포토 에디터, 사진 필터, 밝기 조절, 대비 조절, 흑백 사진 필터',
+      h1: '포토 에디터 & 필터',
+      subDescription: '사진의 색감과 분위기를 손쉽게 보정하고 감성적인 필터를 적용해보세요.',
+      howToUse: [
+        '보정할 사진을 업로드합니다.',
+        '밝기, 대비, 채도 슬라이더를 조절하거나 흑백/세피아 필터를 선택합니다.',
+        '보정된 사진을 다운로드합니다.'
+      ],
+      faq: [
+        { q: '필터를 여러 개 중복 적용할 수 있나요?', a: '네! 밝기와 대비 조절은 물론 흑백이나 세피아 필터를 동시에 조합하여 적용할 수 있습니다.' }
+      ]
+    },
+    'watermark': {
+      title: '워터마크 이미지 - 사진에 로고 및 텍스트 워터마크 추가',
+      description: '저작권 보호를 위해 사진에 나만의 텍스트 서명이나 워터마크를 투명도와 함께 삽입하세요.',
+      keywords: '워터마크 추가, 사진 서명 넣기, 이미지 저작권 표시, watermark image',
+      h1: '워터마크 이미지 추가',
+      subDescription: '소중한 창작물과 사진에 워터마크를 넣어 불펌과 무단 도용을 방지하세요.',
+      howToUse: [
+        '워터마크를 넣을 이미지를 업로드합니다.',
+        '원하는 텍스트 문구, 글자 크기, 색상 및 투명도를 설정합니다.',
+        '원하는 위치(중앙, 우하단 등)를 선택하고 저장합니다.'
+      ],
+      faq: [
+        { q: '투명도 조절이 가능한가요?', a: '네, 0%부터 100%까지 세밀하게 투명도를 조절할 수 있습니다.' }
+      ]
+    },
+    'blur-face': {
+      title: '얼굴 흐리기 & 모자이크 - 개인정보 및 프라이버시 보호',
+      description: '사진 속 얼굴이나 민감한 정보(차량 번호판, 문서)를 모자이크나 블러로 안전하게 가리세요.',
+      keywords: '얼굴 모자이크, 사진 블러 처리, 개인정보 보호, blur face, mosaic',
+      h1: '얼굴 흐리기 (모자이크 툴)',
+      subDescription: 'SNS에 올리기 전 초상권과 개인정보를 완벽하게 보호하세요.',
+      howToUse: [
+        '가리고 싶은 이미지를 업로드합니다.',
+        '모자이크 강도를 조절합니다.',
+        '변환 후 안전하게 다운로드합니다.'
+      ],
+      faq: [
+        { q: '모자이크 강도를 바꿀 수 있나요?', a: '슬라이더를 통해 미세한 블러부터 강력한 픽셀 모자이크까지 조절 가능합니다.' }
+      ]
+    },
+    'remove-bg': {
+      title: '배경 제거 (누끼 따기) - 투명 배경 PNG 자동 추출',
+      description: '이미지의 배경을 깔끔하게 제거하고 피사체만 투명 PNG로 즉시 다운로드하세요.',
+      keywords: '누끼 따기, 배경 제거, 투명 png 만들기, remove background',
+      h1: '배경 제거 (누끼 따기)',
+      subDescription: '상품 사진이나 프로필 사진의 배경을 순식간에 투명하게 만들어 드립니다.',
+      howToUse: [
+        '배경을 지우고 싶은 사진을 업로드합니다.',
+        '배경 제거 민감도(허용 오차)를 설정합니다.',
+        '투명 배경 PNG로 저장합니다.'
+      ],
+      faq: [
+        { q: '투명 배경 파일로 저장되나요?', a: '네! 알파 채널이 적용된 투명 PNG 포맷으로 저장됩니다.' }
+      ]
+    },
+    'meme': {
+      title: '밈 만들기 (Meme Generator) - 짤 생성기 무료 툴',
+      description: '유명 짤이나 내 사진에 상단/하단 자막을 넣어 재미있는 밈(Meme)을 만드세요.',
+      keywords: '밈 만들기, 짤 생성기, 텍스트 짤 만들기, meme generator',
+      h1: '밈 만들기 (짤 생성기)',
+      subDescription: '임팩트 있는 자막 폰트로 나만의 재미있는 밈 이미지를 몇 초 만에 제작하세요.',
+      howToUse: [
+        '밈으로 만들 사진을 업로드합니다.',
+        '상단 텍스트와 하단 텍스트를 입력합니다.',
+        '글자 크기 조절 후 완성된 밈을 다운로드합니다.'
+      ],
+      faq: [
+        { q: '한글 폰트도 잘 나오나요?', a: '네, 한글 및 영어 모두 굵은 외곽선 스타일로 선명하게 표시됩니다.' }
+      ]
+    },
+    'upscale': {
+      title: '이미지 업스케일 - 2x, 4x 고화질 해상도 확대',
+      description: '작은 이미지나 흐린 사진의 해상도를 2배, 4배로 깨짐 없이 선명하게 확대하세요.',
+      keywords: '이미지 업스케일, 사진 해상도 높이기, 고화질 확대, upscale image',
+      h1: '이미지 업스케일 (고화질 확대)',
+      subDescription: '디테일을 살리며 사진의 크기와 픽셀 해상도를 대폭 업그레이드합니다.',
+      howToUse: [
+        '확대할 이미지를 업로드합니다.',
+        '2배(2x) 또는 4배(4x) 배율을 선택합니다.',
+        '고해상도로 커진 이미지를 다운로드합니다.'
+      ],
+      faq: [
+        { q: '최대 몇 배까지 확대되나요?', a: '최대 4배(4x)까지 초고해상도로 리스케일링할 수 있습니다.' }
+      ]
+    },
+    'html-to-image': {
+      title: 'HTML 텍스트에서 이미지 - 텍스트 및 마크업 이미지 렌더링',
+      description: 'HTML 코드나 텍스트 문구를 멋진 고화질 카드 이미지로 렌더링하여 저장하세요.',
+      keywords: 'html 이미지 변환, 텍스트 이미지 만들기, html to image',
+      h1: 'HTML / 텍스트에서 이미지 생성',
+      subDescription: '공지사항 카드, 코드 스니펫, SNS 텍스트 카드를 즉시 이미지로 추출합니다.',
+      howToUse: [
+        '원하는 텍스트나 내용을 입력합니다.',
+        '디자인 템플릿과 함께 렌더링을 시작합니다.',
+        '고화질 PNG 카드로 다운로드합니다.'
+      ],
+      faq: [
+        { q: 'SNS 공유용 규격인가요?', a: '네, 오픈그래프(OG) 최적 해상도(1200x630)로 자동 생성됩니다.' }
+      ]
     }
   },
   en: {
@@ -317,6 +452,87 @@ export const MULTI_LANG_SEO: Record<SupportedLocale, Record<string, SeoContent>>
       subDescription: 'Preserve transparency and details when converting WEBP to PNG.',
       howToUse: ['Upload WEBP files.', 'Convert to PNG.', 'Save your file.'],
       faq: [{ q: 'Is transparency preserved?', a: 'Yes, existing transparent backgrounds remain intact in the output PNG.' }]
+    },
+    'crop': {
+      title: 'Crop Image - Free Online Pixel & Aspect Ratio Cropper',
+      description: 'Crop images easily by selecting custom aspect ratios (1:1, 16:9, 4:3, 9:16) with pixel precision.',
+      keywords: 'crop image, image cropper, cut photo, aspect ratio crop',
+      h1: 'Crop Image Online',
+      subDescription: 'Trim unwanted areas and adapt photos for Instagram, YouTube thumbnails, and Shorts.',
+      howToUse: ['Upload your image.', 'Select your desired aspect ratio or area.', 'Download the cropped image.'],
+      faq: [{ q: 'Does cropping reduce resolution quality?', a: 'No, your selected pixels are extracted losslessly with crystal clarity.' }]
+    },
+    'rotate': {
+      title: 'Rotate & Flip Image - 90/180/270 Degree & Mirror Flip',
+      description: 'Rotate skewed photos 90, 180, or 270 degrees, and flip horizontally or vertically.',
+      keywords: 'rotate image, flip image, mirror photo, turn photo 90 degrees',
+      h1: 'Rotate & Flip Image',
+      subDescription: 'Correct photo orientation or mirror images horizontally and vertically.',
+      howToUse: ['Upload photos to rotate.', 'Choose rotation degree or flip direction.', 'Save the rotated photo.'],
+      faq: [{ q: 'Can I rotate multiple photos together?', a: 'Yes, batch rotation applies the same angle to all loaded files.' }]
+    },
+    'photo-editor': {
+      title: 'Photo Editor & Filters - Brightness, Contrast, Blur & Grayscale',
+      description: 'Tweak image brightness, contrast, saturation, and apply vintage sepia, grayscale, and blur filters.',
+      keywords: 'photo editor, image filter, adjust brightness, contrast, black and white filter',
+      h1: 'Photo Editor & Filters',
+      subDescription: 'Enhance colors and apply creative artistic effects right in your browser.',
+      howToUse: ['Upload your photo.', 'Adjust brightness, contrast, saturation or filter toggles.', 'Download enhanced picture.'],
+      faq: [{ q: 'Can I combine multiple effects?', a: 'Yes! All color adjustments and stylistic filters can be combined.' }]
+    },
+    'watermark': {
+      title: 'Watermark Image - Add Custom Text & Signatures to Photos',
+      description: 'Protect your creative works by stamping custom text watermarks with opacity and positioning.',
+      keywords: 'watermark image, add watermark, photo copyright stamp, text on photo',
+      h1: 'Watermark Image',
+      subDescription: 'Prevent unauthorized copying and brand your photography effortlessly.',
+      howToUse: ['Upload images.', 'Enter your watermark text, choose font size, color, opacity and position.', 'Download stamped images.'],
+      faq: [{ q: 'Can I adjust watermark transparency?', a: 'Yes, full opacity slider allows subtle translucent overlays.' }]
+    },
+    'blur-face': {
+      title: 'Blur Face & Mosaic - Protect Privacy and Sensitive Data',
+      description: 'Conceal faces, license plates, or sensitive documents with pixelated mosaic or blur filters.',
+      keywords: 'blur face, mosaic image, hide face, privacy photo protection',
+      h1: 'Blur Faces & Mosaic',
+      subDescription: 'Shield identities and sensitive data before posting online.',
+      howToUse: ['Upload the image.', 'Adjust the mosaic pixel intensity slider.', 'Download the privacy-protected photo.'],
+      faq: [{ q: 'Can I control the blur intensity?', a: 'Yes, slide between mild blur and heavy pixelation.' }]
+    },
+    'remove-bg': {
+      title: 'Remove Background - Create Transparent PNG Cutouts',
+      description: 'Automatically isolate subjects and remove solid backgrounds to generate transparent PNGs.',
+      keywords: 'remove background, transparent png, cutout maker, transparent background',
+      h1: 'Remove Background (Cutout)',
+      subDescription: 'Turn product and profile photos into transparent PNG cutouts in seconds.',
+      howToUse: ['Upload a photo with solid/contrast background.', 'Adjust background tolerance.', 'Download transparent PNG.'],
+      faq: [{ q: 'Does it produce transparent PNG?', a: 'Yes, output is saved in alpha-channel transparent PNG format.' }]
+    },
+    'meme': {
+      title: 'Meme Generator - Create Custom Caption Memes Online',
+      description: 'Make viral memes easily with top and bottom bold captions using classic outline typography.',
+      keywords: 'meme generator, make memes, caption photos, custom meme maker',
+      h1: 'Meme Generator',
+      subDescription: 'Craft hilarious memes in seconds with iconic Impact-style outlined text.',
+      howToUse: ['Upload your template picture.', 'Enter top and bottom captions.', 'Download your completed meme.'],
+      faq: [{ q: 'Does it support multi-line captions?', a: 'Yes, hit enter to create multi-line text.' }]
+    },
+    'upscale': {
+      title: 'Upscale Image - 2x and 4x Super Resolution Enhancer',
+      description: 'Enlarge small or low-resolution images 2x or 4x without jagged pixelation.',
+      keywords: 'upscale image, enlarge photo, 4k image upscale, increase resolution',
+      h1: 'Upscale Image (2x, 4x)',
+      subDescription: 'Boost pixel dimensions and sharpen details for posters and high-DPI displays.',
+      howToUse: ['Upload the image to enlarge.', 'Select 2x or 4x upscale factor.', 'Download high-res result.'],
+      faq: [{ q: 'What is the maximum upscale factor?', a: 'Up to 4x supersampling resolution scaling.' }]
+    },
+    'html-to-image': {
+      title: 'HTML / Text to Image - Render Beautiful Announcement Cards',
+      description: 'Render text and HTML markup directly into social media ready PNG card images.',
+      keywords: 'html to image, text to image card, og image maker, code card renderer',
+      h1: 'HTML & Text to Image',
+      subDescription: 'Convert text snippets, announcements, and notes into sleek PNG cards.',
+      howToUse: ['Type or paste your text.', 'Preview and generate.', 'Download high-res 1200x630 card.'],
+      faq: [{ q: 'Is it optimized for social media?', a: 'Yes, exported at standard 1200x630 OpenGraph dimensions.' }]
     }
   },
   ja: {

@@ -406,3 +406,527 @@ export const createPdfFromImages = async (
   onProgress(100);
   return pdf!.output('blob');
 };
+
+// ==========================================
+// Advanced Image Tools (Client-side HTML5)
+// ==========================================
+
+export async function cropImage(
+  file: File, 
+  ratio: 'free' | '1:1' | '16:9' | '4:3' | '9:16', 
+  onProgress: (p: number) => void
+): Promise<Blob> {
+  onProgress(20);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      onProgress(50);
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject(new Error('Canvas context failed'));
+
+      let srcW = img.width;
+      let srcH = img.height;
+      let targetW = srcW;
+      let targetH = srcH;
+      let startX = 0;
+      let startY = 0;
+
+      if (ratio === '1:1') {
+        const side = Math.min(srcW, srcH);
+        startX = (srcW - side) / 2;
+        startY = (srcH - side) / 2;
+        targetW = side;
+        targetH = side;
+      } else if (ratio === '16:9') {
+        if (srcW / srcH > 16 / 9) {
+          targetH = srcH;
+          targetW = srcH * (16 / 9);
+          startX = (srcW - targetW) / 2;
+        } else {
+          targetW = srcW;
+          targetH = srcW / (16 / 9);
+          startY = (srcH - targetH) / 2;
+        }
+      } else if (ratio === '4:3') {
+        if (srcW / srcH > 4 / 3) {
+          targetH = srcH;
+          targetW = srcH * (4 / 3);
+          startX = (srcW - targetW) / 2;
+        } else {
+          targetW = srcW;
+          targetH = srcW / (4 / 3);
+          startY = (srcH - targetH) / 2;
+        }
+      } else if (ratio === '9:16') {
+        if (srcW / srcH > 9 / 16) {
+          targetH = srcH;
+          targetW = srcH * (9 / 16);
+          startX = (srcW - targetW) / 2;
+        } else {
+          targetW = srcW;
+          targetH = srcW / (9 / 16);
+          startY = (srcH - targetH) / 2;
+        }
+      }
+
+      canvas.width = Math.round(targetW);
+      canvas.height = Math.round(targetH);
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, startX, startY, targetW, targetH, 0, 0, canvas.width, canvas.height);
+
+      onProgress(85);
+      canvas.toBlob((b) => {
+        if (b) {
+          onProgress(100);
+          resolve(b);
+        } else reject(new Error('크롭 실패'));
+      }, 'image/png');
+    };
+    img.onerror = () => reject(new Error('이미지 로드 실패'));
+    img.src = url;
+  });
+}
+
+export async function rotateAndFlipImage(
+  file: File,
+  angle: number,
+  flipH: boolean,
+  flipV: boolean,
+  onProgress: (p: number) => void
+): Promise<Blob> {
+  onProgress(20);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      onProgress(50);
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject(new Error('Canvas context failed'));
+
+      const rad = (angle * Math.PI) / 180;
+      const is90or270 = angle === 90 || angle === 270;
+
+      canvas.width = is90or270 ? img.height : img.width;
+      canvas.height = is90or270 ? img.width : img.height;
+
+      ctx.save();
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.rotate(rad);
+      ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
+      ctx.drawImage(img, -img.width / 2, -img.height / 2);
+      ctx.restore();
+
+      onProgress(85);
+      canvas.toBlob((b) => {
+        if (b) {
+          onProgress(100);
+          resolve(b);
+        } else reject(new Error('회전 처리 실패'));
+      }, 'image/png');
+    };
+    img.onerror = () => reject(new Error('이미지 로드 실패'));
+    img.src = url;
+  });
+}
+
+export async function editPhotoFilters(
+  file: File,
+  options: {
+    brightness: number;
+    contrast: number;
+    saturation: number;
+    grayscale: boolean;
+    sepia: boolean;
+    blur: number;
+    invert: boolean;
+  },
+  onProgress: (p: number) => void
+): Promise<Blob> {
+  onProgress(20);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      onProgress(50);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject(new Error('Canvas context failed'));
+
+      const filters = [
+        `brightness(${options.brightness}%)`,
+        `contrast(${options.contrast}%)`,
+        `saturate(${options.saturation}%)`,
+        options.grayscale ? 'grayscale(100%)' : '',
+        options.sepia ? 'sepia(100%)' : '',
+        options.blur > 0 ? `blur(${options.blur}px)` : '',
+        options.invert ? 'invert(100%)' : ''
+      ].filter(Boolean).join(' ');
+
+      ctx.filter = filters || 'none';
+      ctx.drawImage(img, 0, 0);
+
+      onProgress(85);
+      canvas.toBlob((b) => {
+        if (b) {
+          onProgress(100);
+          resolve(b);
+        } else reject(new Error('필터 적용 실패'));
+      }, 'image/png');
+    };
+    img.onerror = () => reject(new Error('이미지 로드 실패'));
+    img.src = url;
+  });
+}
+
+export async function applyWatermark(
+  file: File,
+  options: {
+    text: string;
+    color: string;
+    size: number;
+    opacity: number;
+    position: 'center' | 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
+  },
+  onProgress: (p: number) => void
+): Promise<Blob> {
+  onProgress(20);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      onProgress(50);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject(new Error('Canvas context failed'));
+
+      ctx.drawImage(img, 0, 0);
+
+      if (options.text.trim()) {
+        ctx.save();
+        const baseFontSize = Math.max(16, Math.round((img.width / 800) * options.size));
+        ctx.font = `bold ${baseFontSize}px sans-serif`;
+        ctx.fillStyle = options.color;
+        ctx.globalAlpha = Math.max(0.1, Math.min(1.0, options.opacity));
+        
+        const metrics = ctx.measureText(options.text);
+        const textW = metrics.width;
+        const textH = baseFontSize;
+
+        let x = canvas.width / 2 - textW / 2;
+        let y = canvas.height / 2 + textH / 3;
+        const pad = Math.round(baseFontSize * 0.8);
+
+        if (options.position === 'bottom-right') {
+          x = canvas.width - textW - pad;
+          y = canvas.height - pad;
+        } else if (options.position === 'bottom-left') {
+          x = pad;
+          y = canvas.height - pad;
+        } else if (options.position === 'top-right') {
+          x = canvas.width - textW - pad;
+          y = pad + textH;
+        } else if (options.position === 'top-left') {
+          x = pad;
+          y = pad + textH;
+        }
+
+        // Shadow for readability
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+        ctx.shadowBlur = 4;
+        ctx.fillText(options.text, x, y);
+        ctx.restore();
+      }
+
+      onProgress(85);
+      canvas.toBlob((b) => {
+        if (b) {
+          onProgress(100);
+          resolve(b);
+        } else reject(new Error('워터마크 적용 실패'));
+      }, 'image/png');
+    };
+    img.onerror = () => reject(new Error('이미지 로드 실패'));
+    img.src = url;
+  });
+}
+
+export async function applyMosaicBlur(
+  file: File,
+  intensity: number,
+  onProgress: (p: number) => void
+): Promise<Blob> {
+  onProgress(20);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      onProgress(40);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject(new Error('Canvas context failed'));
+
+      // Downscale then upscale with pixelation
+      const scale = Math.max(0.02, 1 / (intensity || 15));
+      const offCanvas = document.createElement('canvas');
+      offCanvas.width = Math.max(1, Math.round(img.width * scale));
+      offCanvas.height = Math.max(1, Math.round(img.height * scale));
+      const offCtx = offCanvas.getContext('2d');
+      if (!offCtx) return reject(new Error('Offscreen context failed'));
+
+      offCtx.drawImage(img, 0, 0, offCanvas.width, offCanvas.height);
+
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(offCanvas, 0, 0, offCanvas.width, offCanvas.height, 0, 0, canvas.width, canvas.height);
+
+      onProgress(85);
+      canvas.toBlob((b) => {
+        if (b) {
+          onProgress(100);
+          resolve(b);
+        } else reject(new Error('모자이크 실패'));
+      }, 'image/png');
+    };
+    img.onerror = () => reject(new Error('이미지 로드 실패'));
+    img.src = url;
+  });
+}
+
+export async function removeImageBackground(
+  file: File,
+  tolerance: number,
+  onProgress: (p: number) => void
+): Promise<Blob> {
+  onProgress(20);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      onProgress(40);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject(new Error('Canvas context failed'));
+
+      ctx.drawImage(img, 0, 0);
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imgData.data;
+
+      // Sample 4 corner pixels to determine dominant background color
+      const corners = [
+        [0, 0],
+        [canvas.width - 1, 0],
+        [0, canvas.height - 1],
+        [canvas.width - 1, canvas.height - 1]
+      ];
+      let bgR = 0, bgG = 0, bgB = 0;
+      corners.forEach(([x, y]) => {
+        const idx = (y * canvas.width + x) * 4;
+        bgR += data[idx];
+        bgG += data[idx + 1];
+        bgB += data[idx + 2];
+      });
+      bgR = Math.round(bgR / 4);
+      bgG = Math.round(bgG / 4);
+      bgB = Math.round(bgB / 4);
+
+      const tol = (tolerance || 25) * 2.5;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        // Euclidean color distance
+        const dist = Math.sqrt(
+          (r - bgR) * (r - bgR) +
+          (g - bgG) * (g - bgG) +
+          (b - bgB) * (b - bgB)
+        );
+
+        if (dist < tol) {
+          data[i + 3] = 0; // Transparent
+        }
+      }
+
+      ctx.putImageData(imgData, 0, 0);
+      onProgress(85);
+
+      canvas.toBlob((b) => {
+        if (b) {
+          onProgress(100);
+          resolve(b);
+        } else reject(new Error('배경 제거 실패'));
+      }, 'image/png');
+    };
+    img.onerror = () => reject(new Error('이미지 로드 실패'));
+    img.src = url;
+  });
+}
+
+export async function createMemeImage(
+  file: File,
+  options: { topText: string; bottomText: string; fontSize: number },
+  onProgress: (p: number) => void
+): Promise<Blob> {
+  onProgress(20);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      onProgress(50);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject(new Error('Canvas context failed'));
+
+      ctx.drawImage(img, 0, 0);
+
+      const fontSize = Math.max(20, Math.round((img.width / 600) * (options.fontSize || 36)));
+      ctx.font = `900 ${fontSize}px Impact, "Arial Black", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = Math.max(3, Math.round(fontSize / 8));
+      ctx.lineJoin = 'round';
+
+      if (options.topText) {
+        const lines = options.topText.toUpperCase().split('\n');
+        lines.forEach((line, idx) => {
+          const y = fontSize * 1.2 + idx * (fontSize * 1.1);
+          ctx.strokeText(line, canvas.width / 2, y);
+          ctx.fillText(line, canvas.width / 2, y);
+        });
+      }
+
+      if (options.bottomText) {
+        const lines = options.bottomText.toUpperCase().split('\n');
+        lines.forEach((line, idx) => {
+          const y = canvas.height - (lines.length - 1 - idx) * (fontSize * 1.1) - (fontSize * 0.4);
+          ctx.strokeText(line, canvas.width / 2, y);
+          ctx.fillText(line, canvas.width / 2, y);
+        });
+      }
+
+      onProgress(85);
+      canvas.toBlob((b) => {
+        if (b) {
+          onProgress(100);
+          resolve(b);
+        } else reject(new Error('밈 생성 실패'));
+      }, 'image/png');
+    };
+    img.onerror = () => reject(new Error('이미지 로드 실패'));
+    img.src = url;
+  });
+}
+
+export async function upscaleImageSuperRes(
+  file: File,
+  factor: 2 | 4,
+  onProgress: (p: number) => void
+): Promise<Blob> {
+  onProgress(20);
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      onProgress(40);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width * factor;
+      canvas.height = img.height * factor;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return reject(new Error('Canvas context failed'));
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      onProgress(85);
+      canvas.toBlob((b) => {
+        if (b) {
+          onProgress(100);
+          resolve(b);
+        } else reject(new Error('업스케일 실패'));
+      }, 'image/png');
+    };
+    img.onerror = () => reject(new Error('이미지 로드 실패'));
+    img.src = url;
+  });
+}
+
+export async function renderHtmlCardToImage(
+  htmlText: string,
+  onProgress: (p: number) => void
+): Promise<Blob> {
+  onProgress(20);
+  const canvas = document.createElement('canvas');
+  canvas.width = 1200;
+  canvas.height = 630;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas context failed');
+
+  // Stylish background gradient
+  const grad = ctx.createLinearGradient(0, 0, 1200, 630);
+  grad.addColorStop(0, '#1E293B');
+  grad.addColorStop(1, '#0F172A');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 1200, 630);
+
+  // Decorative border
+  ctx.strokeStyle = '#38BDF8';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(40, 40, 1120, 550);
+
+  // Title
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = 'bold 44px sans-serif';
+  ctx.fillText('HTML & Text Card', 80, 120);
+
+  // Content
+  ctx.fillStyle = '#E2E8F0';
+  ctx.font = '24px sans-serif';
+  const lines = (htmlText || 'Hello World!').split('\n');
+  lines.forEach((line, i) => {
+    if (i < 12) ctx.fillText(line, 80, 180 + i * 36);
+  });
+
+  onProgress(85);
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((b) => {
+      if (b) {
+        onProgress(100);
+        resolve(b);
+      } else reject(new Error('HTML 렌더링 실패'));
+    }, 'image/png');
+  });
+}
+
