@@ -26,6 +26,13 @@
             aclib.runAutoTag({ zoneId: zone });
           } catch (e) {}
         });
+        // Adcash In-Page Push
+        try {
+          aclib.runInPagePush({
+            zoneId: '12192478',
+            maxAds: 2,
+          });
+        } catch (e) {}
       } catch (e) {}
     </script>
   </head>
