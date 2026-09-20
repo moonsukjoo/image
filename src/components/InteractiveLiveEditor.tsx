@@ -8,6 +8,7 @@ import { saveAs } from 'file-saver';
 import { FileItem, AppSettings } from '../types';
 import { cn, formatSize } from '../lib/utils';
 import { SupportedLocale } from '../lib/i18n';
+import { addProcessLog } from '../lib/store';
 
 interface InteractiveLiveEditorProps {
   files: FileItem[];
@@ -334,6 +335,14 @@ export const InteractiveLiveEditor: React.FC<InteractiveLiveEditorProps> = ({
     const baseName = currentFile.originalFile.name.substring(0, currentFile.originalFile.name.lastIndexOf('.')) || currentFile.originalFile.name;
     const ext = targetFormat === 'jpg' ? 'jpg' : targetFormat === 'webp' ? 'webp' : 'png';
     const fileName = `${baseName}_${targetFormat}.${ext}`;
+
+    addProcessLog({
+      tool: targetFormat,
+      format: ext.toUpperCase(),
+      fileSize: outputBlob.size || currentFile.originalSize,
+      status: 'success',
+      durationMs: 150
+    });
 
     if (onSingleDownloadDirect) {
       onSingleDownloadDirect(outputBlob, fileName);

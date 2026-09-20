@@ -241,19 +241,54 @@ function AdminDashboard({ onNavigateToLogs }: { onNavigateToLogs?: () => void })
   const [metrics, setMetrics] = useState(() => getDashboardMetrics());
   const [logs, setLogs] = useState<ProcessLog[]>([]);
 
-  useEffect(() => {
+  const refreshData = () => {
     setMetrics(getDashboardMetrics());
-    setLogs(getProcessLogs().slice(0, 5));
+    setLogs(getProcessLogs().slice(0, 8));
+  };
+
+  useEffect(() => {
+    refreshData();
+    const handleUpdate = () => refreshData();
+    window.addEventListener('image-magic-log-updated', handleUpdate);
+    window.addEventListener('image-magic-visit-updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+
+    const interval = setInterval(refreshData, 3000);
+    return () => {
+      window.removeEventListener('image-magic-log-updated', handleUpdate);
+      window.removeEventListener('image-magic-visit-updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+      clearInterval(interval);
+    };
   }, []);
+
+  const totalToolCount = metrics.toolUsageChart.reduce((acc, curr) => acc + curr.value, 0);
 
   return (
     <>
-      <header className="mb-6 md:mb-8">
-        <h2 className="text-2xl sm:text-3xl font-bold text-slate-800">대시보드 요약</h2>
-        <p className="text-slate-500 mt-1 text-sm">실시간 서비스 파일 처리 및 방문자 통계 현황입니다.</p>
+      <header className="mb-6 md:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <div className="flex items-center gap-2.5 mb-1">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">대시보드 요약</h2>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              실시간 실제 데이터 연동
+            </span>
+          </div>
+          <p className="text-slate-500 text-sm">실시간 서비스 파일 처리 및 방문자 통계 현황입니다.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={refreshData}
+            className="px-3.5 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold rounded-xl text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+          >
+            <RefreshCw size={14} /> 새로고침
+          </button>
+        </div>
       </header>
 
-      {/* Stats Grid - Real Live Metrics */}
+      {/* Stats Grid - 100% Real Live Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 md:mb-8">
         <StatCard 
           title="오늘 방문자" 
@@ -283,59 +318,89 @@ function AdminDashboard({ onNavigateToLogs }: { onNavigateToLogs?: () => void })
 
       {/* Charts Grid - Real Dynamic Data */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <h3 className="text-lg font-bold text-slate-800 mb-6">일별 방문자 추이</h3>
+        <div className="bg-white p-6 rounded-2xl shadow-xs border border-slate-200/80">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h3 className="text-base font-bold text-slate-900">일별 방문자 추이</h3>
+              <p className="text-xs text-slate-500 mt-0.5">최근 7일간 실제 방문 세션 집계</p>
+            </div>
+            <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">
+              오늘: {metrics.todayVisitors}명
+            </span>
+          </div>
           <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={metrics.dailyVisitorsChart}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                <YAxis axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-                <Line type="monotone" dataKey="visitors" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} allowDecimals={false} />
+                <Tooltip 
+                  formatter={(val: any) => [`${val}명`, '방문자']}
+                  contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} 
+                />
+                <Line type="monotone" dataKey="visitors" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: '#3b82f6' }} activeDot={{ r: 6 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <h3 className="text-lg font-bold text-slate-800 mb-6">도구별 실제 이용 비율</h3>
-          <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={metrics.toolUsageChart}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  fill="#8884d8"
-                  paddingAngle={5}
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
-                >
-                  {metrics.toolUsageChart.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
-              </PieChart>
-            </ResponsiveContainer>
+        <div className="bg-white p-6 rounded-2xl shadow-xs border border-slate-200/80">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h3 className="text-base font-bold text-slate-900">도구별 실제 이용 비율</h3>
+              <p className="text-xs text-slate-500 mt-0.5">처리된 파일 로그 기반 통계</p>
+            </div>
+            <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg">
+              총 {metrics.totalFilesProcessed}건
+            </span>
+          </div>
+          <div className="h-72 flex items-center justify-center">
+            {totalToolCount === 0 ? (
+              <div className="text-center p-6 text-slate-400">
+                <FileImage size={40} className="mx-auto mb-2 text-slate-300 opacity-60" />
+                <p className="text-sm font-semibold text-slate-600">아직 처리된 파일 내역이 없습니다</p>
+                <p className="text-xs text-slate-400 mt-1">사용자가 파일 변환 또는 압축을 실행하면 자동으로 집계됩니다.</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={metrics.toolUsageChart.filter(t => t.value > 0)}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    fill="#8884d8"
+                    paddingAngle={5}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                  >
+                    {metrics.toolUsageChart.filter(t => t.value > 0).map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(val: any) => [`${val}건`, '이용 횟수']}
+                    contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} 
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
       </div>
 
       {/* Recent Processing Quick View */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-8">
+      <div className="bg-white p-6 rounded-2xl shadow-xs border border-slate-200/80 mb-8">
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h3 className="text-lg font-bold text-slate-800">최근 처리 내역 요약</h3>
+            <h3 className="text-base font-bold text-slate-900">최근 처리 내역 요약</h3>
             <p className="text-xs text-slate-500 mt-0.5">클라이언트에서 익명화되어 안전하게 집계된 최근 파일 처리 기록</p>
           </div>
           {onNavigateToLogs && (
             <button 
               onClick={onNavigateToLogs}
-              className="text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+              className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 hover:underline cursor-pointer"
             >
               전체 로그 보기 →
             </button>
@@ -353,25 +418,47 @@ function AdminDashboard({ onNavigateToLogs }: { onNavigateToLogs?: () => void })
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {logs.map((log) => (
-                <tr key={log.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="py-3.5 px-4 text-slate-500 text-xs font-mono">{new Date(log.timestamp).toLocaleTimeString()}</td>
-                  <td className="py-3.5 px-4 font-semibold text-slate-800">{log.tool}</td>
-                  <td className="py-3.5 px-4"><span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-md font-mono">{log.format}</span></td>
-                  <td className="py-3.5 px-4 text-slate-600 text-xs font-mono">{(log.fileSize / (1024 * 1024)).toFixed(2)} MB</td>
-                  <td className="py-3.5 px-4">
-                    {log.status === 'success' ? (
-                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                        <CheckCircle2 size={13} /> 성공
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">
-                        <XCircle size={13} /> 실패
-                      </span>
-                    )}
+              {logs.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-8 text-center text-slate-400 text-sm">
+                    아직 기록된 파일 처리 내역이 없습니다. (이미지 변환/압축 작업 시 실시간 기록됩니다)
                   </td>
                 </tr>
-              ))}
+              ) : (
+                logs.map((log) => {
+                  const sizeFormatted = log.fileSize < 1024 * 1024 
+                    ? `${(log.fileSize / 1024).toFixed(1)} KB` 
+                    : `${(log.fileSize / (1024 * 1024)).toFixed(2)} MB`;
+                  
+                  return (
+                    <tr key={log.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3.5 px-4 text-slate-500 text-xs font-mono">
+                        {new Date(log.timestamp).toLocaleTimeString('ko-KR')}
+                      </td>
+                      <td className="py-3.5 px-4 font-semibold text-slate-800">{log.tool}</td>
+                      <td className="py-3.5 px-4">
+                        <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-md font-mono font-medium">
+                          {log.format}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-slate-600 text-xs font-mono">
+                        {sizeFormatted}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        {log.status === 'success' ? (
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                            <CheckCircle2 size={13} /> 성공
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full">
+                            <XCircle size={13} /> 실패
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>

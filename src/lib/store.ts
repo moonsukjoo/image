@@ -31,7 +31,7 @@ export const ALL_TOOLS: { id: ToolId; name: string }[] = [
   { id: 'crop', name: '이미지 잘라내기' },
   { id: 'rotate', name: '이미지 회전 & 반전' },
   { id: 'photo-editor', name: '포토 에디터 & 필터' },
-  { id: 'watermark', name: '워터마크 이미지' },
+  { id: 'watermark', name: '워터마크 서명' },
   { id: 'blur-face', name: '얼굴 흐리기 (모자이크)' },
   { id: 'remove-bg', name: '배경 제거 (누끼)' },
   { id: 'meme', name: '밈 만들기' },
@@ -53,6 +53,26 @@ export const ALL_TOOLS: { id: ToolId; name: string }[] = [
   { id: 'bmp-to-png', name: 'BMP → PNG' },
   { id: 'svg-to-png', name: 'SVG → PNG' }
 ];
+
+export function formatToolName(toolKey: string): string {
+  if (!toolKey) return '이미지 처리';
+  const match = ALL_TOOLS.find(t => t.id === toolKey || t.name === toolKey);
+  if (match) return match.name;
+  if (toolKey === 'compress') return '이미지 압축';
+  if (toolKey === 'resize') return '이미지 크기 조절';
+  if (toolKey === 'pdf') return '이미지 → PDF';
+  if (toolKey === 'pdf-to-image') return 'PDF → 이미지';
+  if (toolKey === 'crop') return '이미지 잘라내기';
+  if (toolKey === 'rotate') return '이미지 회전 & 반전';
+  if (toolKey === 'photo-editor') return '포토 에디터 & 필터';
+  if (toolKey === 'watermark') return '워터마크 서명';
+  if (toolKey === 'blur-face') return '얼굴 흐리기 (모자이크)';
+  if (toolKey === 'remove-bg') return '배경 제거 (누끼)';
+  if (toolKey === 'meme') return '밈 만들기';
+  if (toolKey === 'upscale') return '이미지 업스케일';
+  if (toolKey === 'html-to-image') return 'HTML 카드 이미지';
+  return toolKey;
+}
 
 export function getAdSettings(): AdSetting[] {
   const stored = localStorage.getItem('adSettings');
@@ -110,66 +130,21 @@ export interface ProcessLog {
   durationMs?: number;
 }
 
-const MAX_LOGS = 100;
+const MAX_LOGS = 200;
 
 export function getProcessLogs(): ProcessLog[] {
   const stored = localStorage.getItem('processLogs');
   if (stored) {
     try {
-      return JSON.parse(stored);
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
     } catch (e) {
       //
     }
   }
-  // Provide initial mock logs if empty so admin can immediately preview the log table
-  const initialLogs: ProcessLog[] = [
-    {
-      id: 'log-1',
-      timestamp: new Date(Date.now() - 1000 * 60 * 3).toISOString(),
-      tool: '이미지 압축',
-      format: 'JPEG',
-      fileSize: 3450200,
-      status: 'success',
-      durationMs: 420
-    },
-    {
-      id: 'log-2',
-      timestamp: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
-      tool: 'PNG → JPG',
-      format: 'PNG',
-      fileSize: 1820400,
-      status: 'success',
-      durationMs: 280
-    },
-    {
-      id: 'log-3',
-      timestamp: new Date(Date.now() - 1000 * 60 * 25).toISOString(),
-      tool: '이미지 → PDF',
-      format: 'JPEG',
-      fileSize: 8490000,
-      status: 'success',
-      durationMs: 1250
-    },
-    {
-      id: 'log-4',
-      timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-      tool: 'HEIC → JPG',
-      format: 'HEIC',
-      fileSize: 5120300,
-      status: 'success',
-      durationMs: 910
-    },
-    {
-      id: 'log-5',
-      timestamp: new Date(Date.now() - 1000 * 60 * 70).toISOString(),
-      tool: '이미지 리사이즈',
-      format: 'WEBP',
-      fileSize: 920000,
-      status: 'error',
-      durationMs: 150
-    }
-  ];
-  return initialLogs;
+  return [];
 }
 
 export function addProcessLog(log: Omit<ProcessLog, 'id' | 'timestamp'>) {
@@ -177,11 +152,15 @@ export function addProcessLog(log: Omit<ProcessLog, 'id' | 'timestamp'>) {
     const logs = getProcessLogs();
     const newEntry: ProcessLog = {
       ...log,
+      tool: formatToolName(log.tool),
       id: Math.random().toString(36).substring(2, 9),
       timestamp: new Date().toISOString()
     };
     const updated = [newEntry, ...logs].slice(0, MAX_LOGS);
     localStorage.setItem('processLogs', JSON.stringify(updated));
+
+    // Dispatch global event for live admin dashboard synchronization
+    window.dispatchEvent(new CustomEvent('image-magic-log-updated', { detail: newEntry }));
   } catch (e) {
     console.error('Failed to save log', e);
   }
@@ -189,6 +168,7 @@ export function addProcessLog(log: Omit<ProcessLog, 'id' | 'timestamp'>) {
 
 export function clearProcessLogs() {
   localStorage.removeItem('processLogs');
+  window.dispatchEvent(new CustomEvent('image-magic-log-updated'));
 }
 
 export interface SiteSettings {
@@ -244,7 +224,7 @@ export function saveCustomSeoOverrides(overrides: Record<string, any>) {
 }
 
 // ==========================================
-// Real Analytics & Dashboard Metrics Engine
+// 100% Real Analytics & Live Metrics Engine
 // ==========================================
 
 const VISITOR_STORAGE_KEY = 'image_magic_visitor_stats';
@@ -265,10 +245,12 @@ export function recordVisit(): void {
       try { visits = JSON.parse(raw); } catch (e) {}
     }
 
+    // Record session visit
     if (!sessionStorage.getItem(sessionKey)) {
       visits[today] = (visits[today] || 0) + 1;
       sessionStorage.setItem(sessionKey, '1');
       localStorage.setItem(VISITOR_STORAGE_KEY, JSON.stringify(visits));
+      window.dispatchEvent(new CustomEvent('image-magic-visit-updated'));
     }
   } catch (e) {
     // Ignore storage errors
@@ -287,35 +269,29 @@ export function getVisitorAnalytics(): {
     try { visits = JSON.parse(raw); } catch (e) {}
   }
 
-  // Realistic historical base trend (past 7 days)
-  const baselineSeed: DailyVisitMap = {};
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    const dateStr = d.toISOString().split('T')[0];
-    const seedVal = 420 + ((d.getDate() * 53) % 280);
-    baselineSeed[dateStr] = seedVal;
-  }
+  // Calculate real daily visits for past 7 days
+  const dailyTrend: { name: string; visitors: number }[] = [];
+  let totalVisitors = 0;
 
-  // Merge real logged visits
-  Object.keys(visits).forEach(date => {
-    baselineSeed[date] = (baselineSeed[date] || 400) + visits[date];
+  // Sum all historical visits
+  Object.values(visits).forEach(v => {
+    totalVisitors += v;
   });
 
-  const todayVisitors = baselineSeed[today] || ((visits[today] || 0) + 950);
+  // Ensure total visitors has at least current counted visits
+  const todayVisitors = visits[today] || 1;
+  if (totalVisitors === 0) totalVisitors = todayVisitors;
 
-  let totalVisitors = 12450;
-  Object.values(visits).forEach(v => { totalVisitors += v; });
-
-  const dailyTrend: { name: string; visitors: number }[] = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date();
     d.setDate(d.getDate() - i);
     const dateStr = d.toISOString().split('T')[0];
     const label = `${d.getMonth() + 1}/${d.getDate()}`;
+    
+    const count = visits[dateStr] !== undefined ? visits[dateStr] : (dateStr === today ? todayVisitors : 0);
     dailyTrend.push({
       name: label,
-      visitors: baselineSeed[dateStr] || 450
+      visitors: count
     });
   }
 
@@ -336,9 +312,13 @@ export interface DashboardMetrics {
   todayPdfCount: number;
   totalPdfCount: number;
   todayResizeCount: number;
+  totalResizeCount: number;
   todayConvertCount: number;
+  totalConvertCount: number;
   dailyVisitorsChart: { name: string; visitors: number }[];
   toolUsageChart: { name: string; value: number }[];
+  recentLogs: ProcessLog[];
+  isRealDataOnly: boolean;
 }
 
 export function getDashboardMetrics(): DashboardMetrics {
@@ -348,63 +328,67 @@ export function getDashboardMetrics(): DashboardMetrics {
   const todayPrefix = new Date().toISOString().split('T')[0];
   const todayLogs = logs.filter(l => l.timestamp && l.timestamp.startsWith(todayPrefix));
   
-  // Real counts calculated from actual logs
-  const realTodayFiles = todayLogs.length;
-  const realTotalFiles = logs.length;
+  // Real counts calculated directly from actual logs
+  const todayFilesProcessed = todayLogs.length;
+  const totalFilesProcessed = logs.length;
 
-  const realTodayCompress = todayLogs.filter(l => 
+  const todayCompressCount = todayLogs.filter(l => 
     l.tool.includes('압축') || l.tool.toLowerCase().includes('compress')
   ).length;
-  const realTotalCompress = logs.filter(l => 
+  const totalCompressCount = logs.filter(l => 
     l.tool.includes('압축') || l.tool.toLowerCase().includes('compress')
   ).length;
 
-  const realTodayPdf = todayLogs.filter(l => 
+  const todayPdfCount = todayLogs.filter(l => 
     l.tool.includes('PDF') || l.tool.toLowerCase().includes('pdf')
   ).length;
-  const realTotalPdf = logs.filter(l => 
+  const totalPdfCount = logs.filter(l => 
     l.tool.includes('PDF') || l.tool.toLowerCase().includes('pdf')
   ).length;
 
-  const realTodayResize = todayLogs.filter(l => 
-    l.tool.includes('리사이즈') || l.tool.toLowerCase().includes('resize')
+  const todayResizeCount = todayLogs.filter(l => 
+    l.tool.includes('크기') || l.tool.includes('리사이즈') || l.tool.includes('자르기') || 
+    l.tool.includes('회전') || l.tool.includes('워터마크') || l.tool.includes('모자이크') || 
+    l.tool.includes('배경') || l.tool.includes('밈') || l.tool.includes('업스케일') || 
+    l.tool.includes('에디터') || l.tool.toLowerCase().includes('resize') || l.tool.toLowerCase().includes('crop')
   ).length;
-  const realTotalResize = logs.filter(l => 
-    l.tool.includes('리사이즈') || l.tool.toLowerCase().includes('resize')
+  const totalResizeCount = logs.filter(l => 
+    l.tool.includes('크기') || l.tool.includes('리사이즈') || l.tool.includes('자르기') || 
+    l.tool.includes('회전') || l.tool.includes('워터마크') || l.tool.includes('모자이크') || 
+    l.tool.includes('배경') || l.tool.includes('밈') || l.tool.includes('업스케일') || 
+    l.tool.includes('에디터') || l.tool.toLowerCase().includes('resize') || l.tool.toLowerCase().includes('crop')
   ).length;
 
-  const realTodayConvert = todayLogs.filter(l => 
+  const todayConvertCount = todayLogs.filter(l => 
     l.tool.includes('→') || l.tool.includes('변환')
   ).length;
-  const realTotalConvert = logs.filter(l => 
+  const totalConvertCount = logs.filter(l => 
     l.tool.includes('→') || l.tool.includes('변환')
   ).length;
 
-  // Real data integrated dynamically
-  const todayFilesProcessed = 3240 + realTodayFiles;
-  const totalFilesProcessed = 45210 + realTotalFiles;
+  // Tool usage distribution dynamically computed directly from real logs
+  const compressLogsCount = totalCompressCount;
+  const convertLogsCount = totalConvertCount;
+  const resizeLogsCount = totalResizeCount;
+  const pdfLogsCount = totalPdfCount;
 
-  const todayCompressCount = 1850 + realTodayCompress;
-  const totalCompressCount = 24100 + realTotalCompress;
-
-  const todayPdfCount = 840 + realTodayPdf;
-  const totalPdfCount = 12300 + realTotalPdf;
-
-  const todayResizeCount = 380 + realTodayResize;
-  const todayConvertCount = 570 + realTodayConvert;
-
-  // Tool usage distribution dynamically computed from all logs
-  const compressValue = Math.max(1, 400 + realTotalCompress * 5);
-  const convertValue = Math.max(1, 300 + realTotalConvert * 5);
-  const resizeValue = Math.max(1, 250 + realTotalResize * 5);
-  const pdfValue = Math.max(1, 200 + realTotalPdf * 5);
-
-  const toolUsageChart = [
-    { name: '이미지 압축', value: compressValue },
-    { name: '이미지 변환', value: convertValue },
-    { name: '이미지 리사이즈', value: resizeValue },
-    { name: 'PDF 변환', value: pdfValue },
+  let toolUsageChart = [
+    { name: '이미지 압축', value: compressLogsCount },
+    { name: '이미지 변환', value: convertLogsCount },
+    { name: '이미지 리사이즈/편집', value: resizeLogsCount },
+    { name: 'PDF 변환', value: pdfLogsCount },
   ];
+
+  // If no logs yet, provide 0 values or clean representation
+  const totalLoggedActions = compressLogsCount + convertLogsCount + resizeLogsCount + pdfLogsCount;
+  if (totalLoggedActions === 0) {
+    toolUsageChart = [
+      { name: '이미지 압축', value: 0 },
+      { name: '이미지 변환', value: 0 },
+      { name: '이미지 리사이즈/편집', value: 0 },
+      { name: 'PDF 변환', value: 0 },
+    ];
+  }
 
   return {
     todayVisitors: visitorStats.todayVisitors,
@@ -416,10 +400,20 @@ export function getDashboardMetrics(): DashboardMetrics {
     todayPdfCount,
     totalPdfCount,
     todayResizeCount,
+    totalResizeCount,
     todayConvertCount,
+    totalConvertCount,
     dailyVisitorsChart: visitorStats.dailyTrend,
-    toolUsageChart
+    toolUsageChart,
+    recentLogs: logs.slice(0, 10),
+    isRealDataOnly: true
   };
 }
 
-
+export function resetAllAnalyticsData(): void {
+  localStorage.removeItem('processLogs');
+  localStorage.removeItem(VISITOR_STORAGE_KEY);
+  sessionStorage.removeItem(SESSION_VISIT_KEY);
+  window.dispatchEvent(new CustomEvent('image-magic-log-updated'));
+  window.dispatchEvent(new CustomEvent('image-magic-visit-updated'));
+}
